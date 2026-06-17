@@ -12,6 +12,7 @@ import {
   View,
 } from 'react-native';
 import { Image } from 'expo-image'; // SVG-capable (backend posters are image/svg+xml)
+import { BlurView } from 'expo-blur';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -74,65 +75,11 @@ export default function HomeScreen({ navigation }: { navigation: Nav }) {
     );
   }
 
-  if (searchOpen) {
-    const cardWidth = (width - SEARCH_PAD * 2 - SEARCH_GAP * (SEARCH_COLS - 1)) / SEARCH_COLS;
-    const q = query.trim();
-    return (
-      <View style={[styles.container, { paddingTop: insets.top + spacing.sm }]}>
-        <View style={styles.searchBar}>
-          <TouchableOpacity hitSlop={10} onPress={closeSearch}>
-            <Ionicons name="chevron-back" size={26} color={colors.text} />
-          </TouchableOpacity>
-          <View style={styles.searchInputWrap}>
-            <Ionicons name="search" size={18} color={colors.textFaint} />
-            <TextInput
-              style={styles.searchInput}
-              placeholder="Szukaj filmów…"
-              placeholderTextColor={colors.textFaint}
-              value={query}
-              onChangeText={setQuery}
-              autoFocus
-              returnKeyType="search"
-              clearButtonMode="while-editing"
-            />
-          </View>
-        </View>
-
-        {q.length === 0 ? (
-          <View style={styles.searchHint}>
-            <Ionicons name="search" size={44} color={colors.textFaint} />
-            <Text style={styles.searchHintText}>Wpisz tytuł lub gatunek</Text>
-          </View>
-        ) : results.length === 0 ? (
-          <View style={styles.searchHint}>
-            <Ionicons name="sad-outline" size={44} color={colors.textFaint} />
-            <Text style={styles.searchHintText}>Brak wyników dla „{q}"</Text>
-          </View>
-        ) : (
-          <FlatList
-            data={results}
-            key={SEARCH_COLS}
-            numColumns={SEARCH_COLS}
-            keyExtractor={(m) => m.id}
-            keyboardShouldPersistTaps="handled"
-            showsVerticalScrollIndicator={false}
-            columnWrapperStyle={{ gap: SEARCH_GAP }}
-            contentContainerStyle={{ padding: SEARCH_PAD, paddingBottom: spacing.xxl, gap: spacing.lg }}
-            renderItem={({ item }) => (
-              <MovieCard
-                movie={item}
-                width={cardWidth}
-                showMeta
-                onPress={() => openDetail(item.id)}
-              />
-            )}
-          />
-        )}
-      </View>
-    );
-  }
+  const cardWidth = (width - SEARCH_PAD * 2 - SEARCH_GAP * (SEARCH_COLS - 1)) / SEARCH_COLS;
+  const q = query.trim();
 
   return (
+    <View style={styles.container}>
     <ScrollView
       style={styles.container}
       contentContainerStyle={{ paddingBottom: spacing.xxl }}
@@ -197,6 +144,65 @@ export default function HomeScreen({ navigation }: { navigation: Nav }) {
         ))}
       </View>
     </ScrollView>
+
+    {/* Search as a frosted-glass overlay above Home — no hard page cut. */}
+    {searchOpen && (
+      <BlurView intensity={60} tint="dark" style={StyleSheet.absoluteFill}>
+        {/* soft gradient so the blur fades into the background instead of a flat slab */}
+        <LinearGradient
+          colors={['rgba(11,11,15,0.55)', 'rgba(11,11,15,0.35)', 'rgba(11,11,15,0.85)']}
+          style={StyleSheet.absoluteFill}
+          pointerEvents="none"
+        />
+        <View style={{ flex: 1, paddingTop: insets.top + spacing.sm }}>
+          <View style={styles.searchBar}>
+            <TouchableOpacity hitSlop={10} onPress={closeSearch}>
+              <Ionicons name="chevron-back" size={26} color={colors.text} />
+            </TouchableOpacity>
+            <BlurView intensity={40} tint="light" style={styles.searchInputWrap}>
+              <Ionicons name="search" size={18} color={colors.text} />
+              <TextInput
+                style={styles.searchInput}
+                placeholder="Szukaj filmów…"
+                placeholderTextColor={colors.textMuted}
+                value={query}
+                onChangeText={setQuery}
+                autoFocus
+                returnKeyType="search"
+                clearButtonMode="while-editing"
+              />
+            </BlurView>
+          </View>
+
+          {q.length === 0 ? (
+            <View style={styles.searchHint}>
+              <Ionicons name="search" size={44} color={colors.text} />
+              <Text style={styles.searchHintText}>Wpisz tytuł lub gatunek</Text>
+            </View>
+          ) : results.length === 0 ? (
+            <View style={styles.searchHint}>
+              <Ionicons name="sad-outline" size={44} color={colors.text} />
+              <Text style={styles.searchHintText}>Brak wyników dla „{q}"</Text>
+            </View>
+          ) : (
+            <FlatList
+              data={results}
+              key={SEARCH_COLS}
+              numColumns={SEARCH_COLS}
+              keyExtractor={(m) => m.id}
+              keyboardShouldPersistTaps="handled"
+              showsVerticalScrollIndicator={false}
+              columnWrapperStyle={{ gap: SEARCH_GAP }}
+              contentContainerStyle={{ padding: SEARCH_PAD, paddingBottom: spacing.xxl, gap: spacing.lg }}
+              renderItem={({ item }) => (
+                <MovieCard movie={item} width={cardWidth} showMeta onPress={() => openDetail(item.id)} />
+              )}
+            />
+          )}
+        </View>
+      </BlurView>
+    )}
+    </View>
   );
 }
 
@@ -215,9 +221,10 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: spacing.sm,
-    backgroundColor: colors.surface,
+    overflow: 'hidden', // clip the inner BlurView to the pill radius
+    backgroundColor: 'rgba(255,255,255,0.10)',
     borderWidth: 1,
-    borderColor: colors.border,
+    borderColor: 'rgba(255,255,255,0.25)',
     borderRadius: radius.pill,
     paddingHorizontal: spacing.md,
     paddingVertical: spacing.sm,
