@@ -1,11 +1,14 @@
-import React, { useCallback, useState } from 'react';
+import React, { useCallback, useMemo, useState } from 'react';
 import {
   ActivityIndicator,
+  FlatList,
   RefreshControl,
   ScrollView,
   StyleSheet,
   Text,
+  TextInput,
   TouchableOpacity,
+  useWindowDimensions,
   View,
 } from 'react-native';
 import { Image } from 'expo-image'; // SVG-capable (backend posters are image/svg+xml)
@@ -17,15 +20,37 @@ import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { colors, radius, spacing } from '../theme';
 import { useCatalog } from '../context/CatalogContext';
 import MovieRow from '../components/MovieRow';
+import MovieCard from '../components/MovieCard';
 import type { RootStackParamList } from '../navigation/types';
 
 type Nav = NativeStackNavigationProp<RootStackParamList>;
+const SEARCH_COLS = 3;
+const SEARCH_GAP = spacing.md;
+const SEARCH_PAD = spacing.lg;
 
 export default function HomeScreen({ navigation }: { navigation: Nav }) {
   const insets = useSafeAreaInsets();
-  const { featured: FEATURED, rows, source, refresh } = useCatalog();
+  const { width } = useWindowDimensions();
+  const { featured: FEATURED, rows, movies, source, refresh } = useCatalog();
   const [refreshing, setRefreshing] = useState(false);
+  const [searchOpen, setSearchOpen] = useState(false);
+  const [query, setQuery] = useState('');
   const openDetail = (movieId: string) => navigation.navigate('Detail', { movieId });
+
+  const results = useMemo(() => {
+    const q = query.trim().toLowerCase();
+    if (!q) return [];
+    return movies.filter(
+      (m) =>
+        m.title.toLowerCase().includes(q) ||
+        m.genres.some((g) => g.toLowerCase().includes(q)),
+    );
+  }, [query, movies]);
+
+  const closeSearch = () => {
+    setSearchOpen(false);
+    setQuery('');
+  };
 
   // Pick up backend changes (new posters, edits, added/removed films) whenever
   // the Home tab regains focus.
@@ -49,6 +74,64 @@ export default function HomeScreen({ navigation }: { navigation: Nav }) {
     );
   }
 
+  if (searchOpen) {
+    const cardWidth = (width - SEARCH_PAD * 2 - SEARCH_GAP * (SEARCH_COLS - 1)) / SEARCH_COLS;
+    const q = query.trim();
+    return (
+      <View style={[styles.container, { paddingTop: insets.top + spacing.sm }]}>
+        <View style={styles.searchBar}>
+          <TouchableOpacity hitSlop={10} onPress={closeSearch}>
+            <Ionicons name="chevron-back" size={26} color={colors.text} />
+          </TouchableOpacity>
+          <View style={styles.searchInputWrap}>
+            <Ionicons name="search" size={18} color={colors.textFaint} />
+            <TextInput
+              style={styles.searchInput}
+              placeholder="Szukaj filmów…"
+              placeholderTextColor={colors.textFaint}
+              value={query}
+              onChangeText={setQuery}
+              autoFocus
+              returnKeyType="search"
+              clearButtonMode="while-editing"
+            />
+          </View>
+        </View>
+
+        {q.length === 0 ? (
+          <View style={styles.searchHint}>
+            <Ionicons name="search" size={44} color={colors.textFaint} />
+            <Text style={styles.searchHintText}>Wpisz tytuł lub gatunek</Text>
+          </View>
+        ) : results.length === 0 ? (
+          <View style={styles.searchHint}>
+            <Ionicons name="sad-outline" size={44} color={colors.textFaint} />
+            <Text style={styles.searchHintText}>Brak wyników dla „{q}"</Text>
+          </View>
+        ) : (
+          <FlatList
+            data={results}
+            key={SEARCH_COLS}
+            numColumns={SEARCH_COLS}
+            keyExtractor={(m) => m.id}
+            keyboardShouldPersistTaps="handled"
+            showsVerticalScrollIndicator={false}
+            columnWrapperStyle={{ gap: SEARCH_GAP }}
+            contentContainerStyle={{ padding: SEARCH_PAD, paddingBottom: spacing.xxl, gap: spacing.lg }}
+            renderItem={({ item }) => (
+              <MovieCard
+                movie={item}
+                width={cardWidth}
+                showMeta
+                onPress={() => openDetail(item.id)}
+              />
+            )}
+          />
+        )}
+      </View>
+    );
+  }
+
   return (
     <ScrollView
       style={styles.container}
@@ -68,7 +151,9 @@ export default function HomeScreen({ navigation }: { navigation: Nav }) {
           <Text style={styles.brand}>
             STREAM<Text style={{ color: colors.primary }}>X</Text>
           </Text>
-          <Ionicons name="search" size={22} color={colors.text} />
+          <TouchableOpacity hitSlop={10} onPress={() => setSearchOpen(true)}>
+            <Ionicons name="search" size={22} color={colors.text} />
+          </TouchableOpacity>
         </View>
 
         <View style={styles.heroContent}>
@@ -118,6 +203,28 @@ export default function HomeScreen({ navigation }: { navigation: Nav }) {
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.background },
   center: { alignItems: 'center', justifyContent: 'center' },
+  searchBar: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.sm,
+    paddingHorizontal: spacing.lg,
+    paddingBottom: spacing.md,
+  },
+  searchInputWrap: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.sm,
+    backgroundColor: colors.surface,
+    borderWidth: 1,
+    borderColor: colors.border,
+    borderRadius: radius.pill,
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.sm,
+  },
+  searchInput: { flex: 1, color: colors.text, fontSize: 15, padding: 0 },
+  searchHint: { flex: 1, alignItems: 'center', justifyContent: 'center', gap: spacing.sm, padding: spacing.xl },
+  searchHintText: { color: colors.textMuted, fontSize: 14, fontWeight: '600' },
   hero: { height: 520, justifyContent: 'space-between' },
   topBar: {
     flexDirection: 'row',
