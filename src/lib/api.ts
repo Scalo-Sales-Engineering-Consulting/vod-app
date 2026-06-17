@@ -122,7 +122,9 @@ export async function fetchVideo(id: string): Promise<VideoWithStream> {
 }
 
 export function posterAbs(v: VideoWithStream): string | undefined {
-  return abs(v.poster_url);
+  const base = abs(v.poster_url);
+  // Same cache-bust as mapVideo so a freshly uploaded poster replaces the cached one.
+  return base ? base + (v.updated_at ? `?v=${encodeURIComponent(v.updated_at)}` : '') : undefined;
 }
 
 export type VideoMeta = {
