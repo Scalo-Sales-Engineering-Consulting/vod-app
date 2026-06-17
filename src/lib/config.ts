@@ -8,7 +8,7 @@
 //
 // Override at runtime without editing code via env var EXPO_PUBLIC_API_URL.
 export const BASE_URL =
-  process.env.EXPO_PUBLIC_API_URL?.replace(/\/+$/, '') ?? 'http://192.168.31.1:8000';
+  process.env.EXPO_PUBLIC_API_URL?.replace(/\/+$/, '') ?? 'http://192.168.31.240:8000';
 
 // Demo account seeded by `python -m scripts.seed_catalog`. Catalog is visible to
 // any logged-in user, so these creds are enough to browse the seeded films.
