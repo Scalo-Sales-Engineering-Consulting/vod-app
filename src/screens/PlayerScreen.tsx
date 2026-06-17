@@ -14,7 +14,6 @@ import {
 import { Image } from 'expo-image'; // SVG-capable poster fallback
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useVideoPlayer, VideoView } from 'expo-video';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import type { RouteProp } from '@react-navigation/native';
@@ -43,7 +42,6 @@ function fmt(sec: number): string {
 }
 
 export default function PlayerScreen({ navigation, route }: { navigation: Nav; route: Rt }) {
-  const insets = useSafeAreaInsets();
   const { width, height } = useWindowDimensions();
   const { getMovie } = useCatalog();
   const movie = getMovie(route.params.movieId);
@@ -61,7 +59,6 @@ export default function PlayerScreen({ navigation, route }: { navigation: Nav; r
   const [buffering, setBuffering] = useState(true);
   const [controls, setControls] = useState(true);
   const [trackW, setTrackW] = useState(0);
-  const [fullscreen, setFullscreen] = useState(false);
 
   const total = hasTrailer ? vidTotal : movie ? durationToSeconds(movie.duration) : 0;
 
@@ -72,13 +69,6 @@ export default function PlayerScreen({ navigation, route }: { navigation: Nav; r
         player.play();
       } catch {}
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-
-  // Optional: open straight into fullscreen (deep link player/:id?fullscreen=1).
-  useEffect(() => {
-    const fs = route.params.fullscreen;
-    if (fs && fs !== 'false' && fs !== '0') setFullscreen(true);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -162,18 +152,7 @@ export default function PlayerScreen({ navigation, route }: { navigation: Nav; r
   };
   const onTrackLayout = (e: LayoutChangeEvent) => setTrackW(e.nativeEvent.layout.width);
 
-  const enterFullscreen = () => {
-    setFullscreen(true);
-    bumpControls();
-  };
-  const exitFullscreen = () => {
-    setFullscreen(false);
-    bumpControls();
-  };
-  const closePlayer = () => {
-    if (fullscreen) exitFullscreen();
-    else navigation.goBack();
-  };
+  const closePlayer = () => navigation.goBack();
 
   // The video/poster surface, shared by both layouts.
   const Surface = ({ style }: { style?: any }) =>
@@ -217,131 +196,57 @@ export default function PlayerScreen({ navigation, route }: { navigation: Nav; r
     </View>
   );
 
-  // ---------- FULLSCREEN (landscape surface, rotated to fill the screen) ----------
-  if (fullscreen) {
-    const lw = height;
-    const lh = width;
-    const pad = spacing.xl;
-    return (
-      <View style={styles.fsRoot}>
-        <StatusBar hidden />
-        <View
-          style={[styles.fsBox, { width: lw, height: lh, left: (width - lw) / 2, top: (height - lh) / 2 }]}
-        >
-          <Pressable style={styles.fsSurface} onPress={() => setControls((c) => !c)}>
-            <Surface style={StyleSheet.absoluteFill} />
-            <LinearGradient
-              colors={['rgba(0,0,0,0.55)', 'rgba(0,0,0,0.05)', 'rgba(0,0,0,0.7)']}
-              style={StyleSheet.absoluteFill}
-              pointerEvents="none"
-            />
-            {buffering && (
-              <View style={styles.bufferer}>
-                <ActivityIndicator size="large" color={colors.primary} />
-              </View>
-            )}
-            {controls && !buffering && (
-              <>
-                <View style={[styles.topBar, { paddingTop: spacing.lg, paddingHorizontal: pad }]}>
-                  <TouchableOpacity hitSlop={12} onPress={exitFullscreen}>
-                    <Ionicons name="contract" size={26} color={colors.text} />
-                  </TouchableOpacity>
-                  <Text numberOfLines={1} style={styles.topTitle}>
-                    {movie.title}
-                  </Text>
-                  <TouchableOpacity hitSlop={12} onPress={closePlayer}>
-                    <Ionicons name="close" size={26} color={colors.text} />
-                  </TouchableOpacity>
-                </View>
-                {Transport}
-                <View style={[styles.fsBottom, { paddingHorizontal: pad, paddingBottom: spacing.lg }]}>
-                  {Scrubber}
-                </View>
-              </>
-            )}
-          </Pressable>
-        </View>
-      </View>
-    );
-  }
-
-  // ---------- PORTRAIT ----------
+  // Always landscape: render the surface rotated 90° to fill the portrait-locked
+  // screen, so the player opens straight into a full-screen horizontal view.
+  const lw = height;
+  const lh = width;
+  const pad = spacing.xl;
   return (
-    <View style={styles.root}>
+    <View style={styles.fsRoot}>
       <StatusBar hidden />
-      <Pressable style={styles.surface} onPress={() => setControls((c) => !c)}>
-        <Surface style={StyleSheet.absoluteFill} />
-        <LinearGradient
-          colors={['rgba(0,0,0,0.5)', 'rgba(0,0,0,0.1)', 'rgba(0,0,0,0.7)']}
-          style={StyleSheet.absoluteFill}
-          pointerEvents="none"
-        />
-        {buffering && (
-          <View style={styles.bufferer}>
-            <ActivityIndicator size="large" color={colors.primary} />
-          </View>
-        )}
-        {controls && !buffering && (
-          <>
-            <View style={[styles.topBar, { paddingTop: insets.top + spacing.sm }]}>
-              <TouchableOpacity hitSlop={12} onPress={closePlayer}>
-                <Ionicons name="chevron-down" size={28} color={colors.text} />
-              </TouchableOpacity>
-              <Text numberOfLines={1} style={styles.topTitle}>
-                {movie.title}
-              </Text>
-              <TouchableOpacity hitSlop={12} onPress={enterFullscreen}>
-                <Ionicons name="expand" size={22} color={colors.text} />
-              </TouchableOpacity>
+      <View
+        style={[styles.fsBox, { width: lw, height: lh, left: (width - lw) / 2, top: (height - lh) / 2 }]}
+      >
+        <Pressable style={styles.fsSurface} onPress={() => setControls((c) => !c)}>
+          <Surface style={StyleSheet.absoluteFill} />
+          <LinearGradient
+            colors={['rgba(0,0,0,0.55)', 'rgba(0,0,0,0.05)', 'rgba(0,0,0,0.7)']}
+            style={StyleSheet.absoluteFill}
+            pointerEvents="none"
+          />
+          {buffering && (
+            <View style={styles.bufferer}>
+              <ActivityIndicator size="large" color={colors.primary} />
             </View>
-            {Transport}
-          </>
-        )}
-      </Pressable>
-
-      <View style={[styles.panel, { paddingBottom: insets.bottom + spacing.lg }]}>
-        <Text style={styles.nowPlaying}>{hasTrailer ? 'NOW PLAYING · TRAILER' : 'NOW PLAYING'}</Text>
-        <Text numberOfLines={1} style={styles.title}>
-          {movie.title}
-        </Text>
-        <Text style={styles.meta}>
-          {movie.year} · {movie.genres.join(' · ')} · {movie.maturity}
-        </Text>
-
-        {Scrubber}
-
-        <View style={styles.toolRow}>
-          <Tool icon="volume-high" label="Volume" />
-          <Tool icon="text" label="Subtitles" />
-          <Tool icon="speedometer" label="1x" />
-          <Tool icon="expand" label="Fullscreen" onPress={enterFullscreen} />
-        </View>
+          )}
+          {controls && !buffering && (
+            <>
+              <View style={[styles.topBar, { paddingTop: spacing.lg, paddingHorizontal: pad }]}>
+                <TouchableOpacity hitSlop={12} onPress={closePlayer}>
+                  <Ionicons name="chevron-down" size={28} color={colors.text} />
+                </TouchableOpacity>
+                <Text numberOfLines={1} style={styles.topTitle}>
+                  {movie.title}
+                </Text>
+                <TouchableOpacity hitSlop={12} onPress={closePlayer}>
+                  <Ionicons name="close" size={26} color={colors.text} />
+                </TouchableOpacity>
+              </View>
+              {Transport}
+              <View style={[styles.fsBottom, { paddingHorizontal: pad, paddingBottom: spacing.lg }]}>
+                {Scrubber}
+              </View>
+            </>
+          )}
+        </Pressable>
       </View>
     </View>
-  );
-}
-
-function Tool({
-  icon,
-  label,
-  onPress,
-}: {
-  icon: keyof typeof Ionicons.glyphMap;
-  label: string;
-  onPress?: () => void;
-}) {
-  return (
-    <TouchableOpacity style={styles.tool} activeOpacity={0.7} onPress={onPress}>
-      <Ionicons name={icon} size={22} color={colors.text} />
-      <Text style={styles.toolLabel}>{label}</Text>
-    </TouchableOpacity>
   );
 }
 
 const styles = StyleSheet.create({
   root: { flex: 1, backgroundColor: '#000' },
   center: { alignItems: 'center', justifyContent: 'center' },
-  surface: { flex: 1, justifyContent: 'center' },
   fsRoot: { flex: 1, backgroundColor: '#000', overflow: 'hidden' },
   fsBox: { position: 'absolute', transform: [{ rotate: '90deg' }], backgroundColor: '#000' },
   fsSurface: { flex: 1, justifyContent: 'center' },
@@ -361,17 +266,10 @@ const styles = StyleSheet.create({
   centerRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: spacing.xxl },
   playBig: { width: 76, height: 76, borderRadius: 38, backgroundColor: colors.text, alignItems: 'center', justifyContent: 'center' },
   fsBottom: { position: 'absolute', left: 0, right: 0, bottom: 0 },
-  panel: { backgroundColor: colors.background, paddingHorizontal: spacing.lg, paddingTop: spacing.lg },
-  nowPlaying: { color: colors.primary, fontSize: 11, fontWeight: '800', letterSpacing: 1 },
-  title: { color: colors.text, fontSize: 22, fontWeight: '800', marginTop: 4 },
-  meta: { color: colors.textMuted, fontSize: 13, marginTop: 4, marginBottom: spacing.lg },
   trackHit: { paddingVertical: spacing.sm },
   track: { height: 4, borderRadius: 2, backgroundColor: colors.border, justifyContent: 'center' },
   fill: { height: 4, borderRadius: 2, backgroundColor: colors.primary },
   knob: { position: 'absolute', width: 14, height: 14, borderRadius: 7, backgroundColor: colors.primary },
   timeRow: { flexDirection: 'row', justifyContent: 'space-between', marginTop: 6 },
   time: { color: colors.textMuted, fontSize: 12, fontWeight: '600' },
-  toolRow: { flexDirection: 'row', justifyContent: 'space-between', marginTop: spacing.xl, paddingHorizontal: spacing.sm },
-  tool: { alignItems: 'center', gap: 5 },
-  toolLabel: { color: colors.textMuted, fontSize: 11, fontWeight: '600' },
 });
