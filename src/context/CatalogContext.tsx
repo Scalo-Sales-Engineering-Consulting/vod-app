@@ -1,7 +1,7 @@
 // Loads the catalog from the FastAPI backend on mount. If the backend is
 // unreachable (offline, wrong BASE_URL), it transparently falls back to the
 // bundled open-movie catalog so the app still renders.
-import React, { createContext, useContext, useEffect, useMemo, useState } from 'react';
+import React, { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
 import { fetchRows, fetchGenres, fetchCatalog, type Row } from '../lib/api';
 import { MOVIES, ROWS, GENRES, type Movie } from '../data/movies';
 
@@ -16,6 +16,8 @@ type CatalogValue = {
   source: Source;
   error: string | null;
   reload: () => void;
+  /** Refetch in the background without flipping the UI to a loading spinner. */
+  refresh: () => Promise<void>;
 };
 
 const bundledRows: Row[] = ROWS.map((r) => ({
@@ -35,32 +37,39 @@ export function CatalogProvider({ children }: { children: React.ReactNode }) {
   const [error, setError] = useState<string | null>(null);
   const [nonce, setNonce] = useState(0);
 
-  useEffect(() => {
-    let cancelled = false;
-    setSource('loading');
-    setError(null);
-    (async () => {
-      try {
-        const [r, g, c] = await Promise.all([fetchRows(), fetchGenres(), fetchCatalog()]);
-        if (cancelled) return;
-        setRows(r);
-        setGenres(g);
-        setMovies(c);
-        setSource('backend');
-      } catch (e) {
-        if (cancelled) return;
-        // Backend down → use bundled catalog, but surface the reason.
+  // Core fetch. `silent` keeps the current UI on screen while refetching in the
+  // background (used on screen focus); otherwise it shows the loading spinner.
+  const fetchAll = useCallback(async (silent: boolean) => {
+    if (!silent) setSource('loading');
+    try {
+      const [r, g, c] = await Promise.all([fetchRows(), fetchGenres(), fetchCatalog()]);
+      setRows(r);
+      setGenres(g);
+      setMovies(c);
+      setSource('backend');
+      setError(null);
+    } catch (e) {
+      // Backend down → fall back to bundled catalog (only when not a silent
+      // refresh; a silent failure keeps whatever is already shown).
+      setError(e instanceof Error ? e.message : String(e));
+      if (!silent) {
         setRows(fallback.rows);
         setGenres(fallback.genres);
         setMovies(fallback.movies);
         setSource('fallback');
-        setError(e instanceof Error ? e.message : String(e));
       }
+    }
+  }, []);
+
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      if (!cancelled) await fetchAll(false);
     })();
     return () => {
       cancelled = true;
     };
-  }, [nonce]);
+  }, [nonce, fetchAll]);
 
   const byId = useMemo(() => new Map(movies.map((m) => [m.id, m])), [movies]);
 
@@ -74,8 +83,9 @@ export function CatalogProvider({ children }: { children: React.ReactNode }) {
       source,
       error,
       reload: () => setNonce((n) => n + 1),
+      refresh: () => fetchAll(true),
     }),
-    [movies, rows, genres, byId, source, error],
+    [movies, rows, genres, byId, source, error, fetchAll],
   );
 
   return <CatalogContext.Provider value={value}>{children}</CatalogContext.Provider>;

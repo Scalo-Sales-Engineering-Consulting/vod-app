@@ -1,6 +1,7 @@
-import React from 'react';
+import React, { useCallback, useState } from 'react';
 import {
   ActivityIndicator,
+  RefreshControl,
   ScrollView,
   StyleSheet,
   Text,
@@ -11,6 +12,7 @@ import { Image } from 'expo-image'; // SVG-capable (backend posters are image/sv
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { useFocusEffect } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { colors, radius, spacing } from '../theme';
 import { useCatalog } from '../context/CatalogContext';
@@ -21,8 +23,23 @@ type Nav = NativeStackNavigationProp<RootStackParamList>;
 
 export default function HomeScreen({ navigation }: { navigation: Nav }) {
   const insets = useSafeAreaInsets();
-  const { featured: FEATURED, rows, source } = useCatalog();
+  const { featured: FEATURED, rows, source, refresh } = useCatalog();
+  const [refreshing, setRefreshing] = useState(false);
   const openDetail = (movieId: string) => navigation.navigate('Detail', { movieId });
+
+  // Pick up backend changes (new posters, edits, added/removed films) whenever
+  // the Home tab regains focus.
+  useFocusEffect(
+    useCallback(() => {
+      refresh();
+    }, [refresh]),
+  );
+
+  const onRefresh = useCallback(async () => {
+    setRefreshing(true);
+    await refresh();
+    setRefreshing(false);
+  }, [refresh]);
 
   if (source === 'loading' || !FEATURED) {
     return (
@@ -37,6 +54,9 @@ export default function HomeScreen({ navigation }: { navigation: Nav }) {
       style={styles.container}
       contentContainerStyle={{ paddingBottom: spacing.xxl }}
       showsVerticalScrollIndicator={false}
+      refreshControl={
+        <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={colors.primary} />
+      }
     >
       <View style={styles.hero}>
         <Image source={FEATURED.backdrop} style={StyleSheet.absoluteFill} contentFit="cover" />

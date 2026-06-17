@@ -20,6 +20,7 @@ export type VideoWithStream = {
   duration_seconds: number | null;
   stream_url: string | null;
   poster_url: string | null;
+  updated_at: string | null;
 };
 type CatalogRow = { genre: string; items: VideoWithStream[] };
 export type GenreCount = { id: string; name: string; count: number };
@@ -69,7 +70,12 @@ function fmtDuration(sec: number | null): string {
 }
 
 export function mapVideo(v: VideoWithStream): Movie {
-  const poster = abs(v.poster_url) ?? '';
+  // Cache-bust by updated_at: the poster URL is stable (/videos/<id>/poster), so
+  // without this expo-image keeps showing the old cached image after a poster swap.
+  const posterBase = abs(v.poster_url);
+  const poster = posterBase
+    ? posterBase + (v.updated_at ? `?v=${encodeURIComponent(v.updated_at)}` : '')
+    : '';
   return {
     id: v.id,
     title: v.title,

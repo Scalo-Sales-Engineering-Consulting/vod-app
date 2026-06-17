@@ -1,12 +1,14 @@
-import React, { useMemo, useState } from 'react';
+import React, { useCallback, useMemo, useState } from 'react';
 import {
   FlatList,
+  RefreshControl,
   StyleSheet,
   Text,
   TouchableOpacity,
   View,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { useFocusEffect } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { colors, radius, spacing } from '../theme';
 import { useCatalog } from '../context/CatalogContext';
@@ -20,8 +22,21 @@ const NUM_COLUMNS = 3;
 
 export default function CatalogScreen({ navigation }: { navigation: Nav }) {
   const insets = useSafeAreaInsets();
-  const { movies, genres: GENRES } = useCatalog();
+  const { movies, genres: GENRES, refresh } = useCatalog();
   const [genre, setGenre] = useState('All');
+  const [refreshing, setRefreshing] = useState(false);
+
+  useFocusEffect(
+    useCallback(() => {
+      refresh();
+    }, [refresh]),
+  );
+
+  const onRefresh = useCallback(async () => {
+    setRefreshing(true);
+    await refresh();
+    setRefreshing(false);
+  }, [refresh]);
 
   const filtered = useMemo(
     () => (genre === 'All' ? movies : movies.filter((m) => m.genres.includes(genre))),
@@ -71,6 +86,9 @@ export default function CatalogScreen({ navigation }: { navigation: Nav }) {
           numColumns={NUM_COLUMNS}
           keyExtractor={(m) => m.id}
           showsVerticalScrollIndicator={false}
+          refreshControl={
+            <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={colors.primary} />
+          }
           columnWrapperStyle={{ gap: COLUMN_GAP }}
           contentContainerStyle={{
             paddingHorizontal: H_PADDING,
