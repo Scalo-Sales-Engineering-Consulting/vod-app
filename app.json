@@ -1,13 +1,16 @@
 {
   "expo": {
-    "name": "vod-app",
+    "name": "StreamX",
     "slug": "vod-app",
+    "scheme": "streamx",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
-    "userInterfaceStyle": "light",
+    "userInterfaceStyle": "dark",
+    "backgroundColor": "#0B0B0F",
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "bundleIdentifier": "com.scalosoft.streamx"
     },
     "android": {
       "adaptiveIcon": {
@@ -20,6 +23,17 @@
     },
     "web": {
       "favicon": "./assets/favicon.png"
-    }
+    },
+    "plugins": [
+      "expo-video",
+      "expo-image",
+      "expo-document-picker",
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "StreamX needs photo access to set a film poster."
+        }
+      ]
+    ]
   }
 }
