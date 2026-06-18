@@ -31,6 +31,7 @@ const linking: LinkingOptions<RootStackParamList> = {
         },
       },
       Detail: 'detail/:movieId',
+      SeriesDetail: 'series-detail/:seriesId',
       Player: 'player/:movieId',
       VideoForm: 'video-form',
     },
