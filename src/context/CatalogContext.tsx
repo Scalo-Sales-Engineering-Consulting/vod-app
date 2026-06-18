@@ -2,7 +2,16 @@
 // unreachable (offline, wrong BASE_URL), it transparently falls back to the
 // bundled open-movie catalog so the app still renders.
 import React, { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
-import { fetchRows, fetchGenres, fetchCatalog, fetchContinue, type Row, type ContinueItem } from '../lib/api';
+import {
+  fetchRows,
+  fetchGenres,
+  fetchCatalog,
+  fetchContinue,
+  fetchTop10,
+  fetchBecauseYouWatched,
+  type Row,
+  type ContinueItem,
+} from '../lib/api';
 import { MOVIES, ROWS, GENRES, type Movie } from '../data/movies';
 
 type Source = 'loading' | 'backend' | 'fallback';
@@ -13,6 +22,8 @@ type CatalogValue = {
   genres: string[];
   featured: Movie | null;
   continueWatching: ContinueItem[];
+  top10: Movie[];
+  becauseYouWatched: Row | null;
   getMovie: (id: string) => Movie | undefined;
   source: Source;
   error: string | null;
@@ -37,14 +48,18 @@ export function CatalogProvider({ children }: { children: React.ReactNode }) {
   const [source, setSource] = useState<Source>('loading');
   const [error, setError] = useState<string | null>(null);
   const [continueWatching, setContinueWatching] = useState<ContinueItem[]>([]);
+  const [top10, setTop10] = useState<Movie[]>([]);
+  const [becauseYouWatched, setBecauseYouWatched] = useState<Row | null>(null);
   const [nonce, setNonce] = useState(0);
 
   // Core fetch. `silent` keeps the current UI on screen while refetching in the
   // background (used on screen focus); otherwise it shows the loading spinner.
   const fetchAll = useCallback(async (silent: boolean) => {
     if (!silent) setSource('loading');
-    // Continue Watching is best-effort (independent of catalog).
+    // Personalized rows are best-effort (independent of the main catalog).
     fetchContinue().then(setContinueWatching).catch(() => {});
+    fetchTop10().then(setTop10).catch(() => {});
+    fetchBecauseYouWatched().then(setBecauseYouWatched).catch(() => {});
     try {
       const [r, g, c] = await Promise.all([fetchRows(), fetchGenres(), fetchCatalog()]);
       setRows(r);
@@ -84,13 +99,15 @@ export function CatalogProvider({ children }: { children: React.ReactNode }) {
       genres,
       featured: rows[0]?.movies[0] ?? movies[0] ?? null,
       continueWatching,
+      top10,
+      becauseYouWatched,
       getMovie: (id: string) => byId.get(id),
       source,
       error,
       reload: () => setNonce((n) => n + 1),
       refresh: () => fetchAll(true),
     }),
-    [movies, rows, genres, continueWatching, byId, source, error, fetchAll],
+    [movies, rows, genres, continueWatching, top10, becauseYouWatched, byId, source, error, fetchAll],
   );
 
   return <CatalogContext.Provider value={value}>{children}</CatalogContext.Provider>;

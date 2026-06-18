@@ -109,6 +109,18 @@ export async function fetchCatalog(): Promise<Movie[]> {
   return items.map(mapVideo);
 }
 
+export async function fetchTop10(): Promise<Movie[]> {
+  const items = await authed<VideoWithStream[]>('/catalog/top10');
+  return items.map(mapVideo);
+}
+
+// Returns null when the user has no watch history yet.
+export async function fetchBecauseYouWatched(): Promise<Row | null> {
+  const r = await authed<{ genre: string; items: VideoWithStream[] }>('/catalog/because-you-watched');
+  if (!r.genre || !r.items.length) return null;
+  return { title: r.genre, movies: r.items.map(mapVideo) };
+}
+
 // ---- management (owner — Bearer) ----
 
 // The films owned by the logged-in user. Returns raw backend rows so the Manage

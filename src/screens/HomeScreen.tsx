@@ -32,7 +32,8 @@ const SEARCH_PAD = spacing.lg;
 export default function HomeScreen({ navigation }: { navigation: Nav }) {
   const insets = useSafeAreaInsets();
   const { width } = useWindowDimensions();
-  const { featured: FEATURED, rows, movies, continueWatching, source, refresh } = useCatalog();
+  const { featured: FEATURED, rows, movies, continueWatching, top10, becauseYouWatched, source, refresh } =
+    useCatalog();
   const [refreshing, setRefreshing] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
   const [query, setQuery] = useState('');
@@ -167,6 +168,37 @@ export default function HomeScreen({ navigation }: { navigation: Nav }) {
           </View>
         )}
 
+        {becauseYouWatched && (
+          <MovieRow
+            title={becauseYouWatched.title}
+            movies={becauseYouWatched.movies}
+            onPressMovie={openDetail}
+          />
+        )}
+
+        {top10.length > 0 && (
+          <View style={styles.cwSection}>
+            <Text style={styles.cwTitle}>Top 10 w Polsce dzisiaj</Text>
+            <ScrollView
+              horizontal
+              showsHorizontalScrollIndicator={false}
+              contentContainerStyle={styles.topScroll}
+            >
+              {top10.map((m, i) => (
+                <TouchableOpacity
+                  key={m.id}
+                  activeOpacity={0.85}
+                  style={styles.topItem}
+                  onPress={() => openDetail(m.id)}
+                >
+                  <Text style={styles.topRank}>{i + 1}</Text>
+                  <Image source={m.poster} style={styles.topPoster} contentFit="cover" />
+                </TouchableOpacity>
+              ))}
+            </ScrollView>
+          </View>
+        )}
+
         {rows.map((row) => (
           <MovieRow
             key={row.title}
@@ -274,6 +306,19 @@ const styles = StyleSheet.create({
   cwBar: { height: 3, backgroundColor: colors.border, borderRadius: 2, marginTop: 6, overflow: 'hidden' },
   cwFill: { height: 3, backgroundColor: colors.primary },
   cwName: { color: colors.textMuted, fontSize: 12, fontWeight: '600', marginTop: 5 },
+  topScroll: { paddingHorizontal: spacing.lg, gap: spacing.lg, alignItems: 'flex-end' },
+  topItem: { flexDirection: 'row', alignItems: 'flex-end' },
+  topRank: {
+    color: colors.surfaceAlt,
+    fontSize: 92,
+    fontWeight: '900',
+    lineHeight: 92,
+    marginRight: -18,
+    textShadowColor: colors.border,
+    textShadowOffset: { width: 0, height: 0 },
+    textShadowRadius: 1,
+  },
+  topPoster: { width: 92, height: 138, borderRadius: radius.sm, backgroundColor: colors.surfaceAlt },
   hero: { height: 520, justifyContent: 'space-between' },
   topBar: {
     flexDirection: 'row',
