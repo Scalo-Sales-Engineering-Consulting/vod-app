@@ -29,6 +29,8 @@ export type GenreCount = { id: string; name: string; count: number };
 
 let token: string | null = null;
 
+let refreshToken: string | null = null;
+
 async function login(): Promise<string> {
   if (token) return token;
   const body = new URLSearchParams({ username: DEMO_EMAIL, password: DEMO_PASSWORD });
@@ -38,9 +40,33 @@ async function login(): Promise<string> {
     body: body.toString(),
   });
   if (!res.ok) throw new Error(`login failed: ${res.status}`);
-  const json = (await res.json()) as { access_token: string };
+  const json = (await res.json()) as { access_token: string; refresh_token?: string };
   token = json.access_token;
+  refreshToken = json.refresh_token ?? null;
   return token;
+}
+
+// On a 401 (access token expired), rotate via the refresh token; fall back to
+// a fresh login. Keeps long-lived sessions working without a restart.
+async function reauth(): Promise<string> {
+  if (refreshToken) {
+    try {
+      const r = await fetch(`${BASE_URL}/auth/refresh`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ refresh_token: refreshToken }),
+      });
+      if (r.ok) {
+        const j = (await r.json()) as { access_token: string; refresh_token?: string };
+        token = j.access_token;
+        refreshToken = j.refresh_token ?? refreshToken;
+        return token;
+      }
+    } catch {}
+  }
+  token = null;
+  refreshToken = null;
+  return login();
 }
 
 // Active profile (Netflix-style). Sent as X-Profile-Id so the backend scopes
@@ -57,10 +83,14 @@ function profileHeaders(base: Record<string, string>): Record<string, string> {
 }
 
 async function authed<T>(path: string): Promise<T> {
-  const t = await login();
-  const res = await fetch(`${BASE_URL}${path}`, {
+  let t = await login();
+  let res = await fetch(`${BASE_URL}${path}`, {
     headers: profileHeaders({ Authorization: `Bearer ${t}` }),
   });
+  if (res.status === 401) {
+    t = await reauth();
+    res = await fetch(`${BASE_URL}${path}`, { headers: profileHeaders({ Authorization: `Bearer ${t}` }) });
+  }
   if (!res.ok) throw new Error(`GET ${path} → ${res.status}`);
   return res.json() as Promise<T>;
 }
@@ -176,7 +206,16 @@ async function authedSend<T>(path: string, method: string, body: FormData | stri
   const headers: Record<string, string> = profileHeaders({ Authorization: `Bearer ${t}` });
   if (isJson) headers['Content-Type'] = 'application/json';
   // For FormData, do NOT set Content-Type — RN sets the multipart boundary itself.
-  const res = await fetch(`${BASE_URL}${path}`, { method, headers, body });
+  let res = await fetch(`${BASE_URL}${path}`, { method, headers, body });
+  // Retry once on expiry (string bodies only — a consumed FormData can't be re-sent).
+  if (res.status === 401 && typeof body === 'string') {
+    const nt = await reauth();
+    res = await fetch(`${BASE_URL}${path}`, {
+      method,
+      headers: { ...headers, Authorization: `Bearer ${nt}` },
+      body,
+    });
+  }
   if (!res.ok) {
     const detail = await res.text().catch(() => '');
     throw new Error(`${method} ${path} → ${res.status} ${detail.slice(0, 200)}`);
