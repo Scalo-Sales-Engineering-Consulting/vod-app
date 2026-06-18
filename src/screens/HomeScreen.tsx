@@ -32,7 +32,7 @@ const SEARCH_PAD = spacing.lg;
 export default function HomeScreen({ navigation }: { navigation: Nav }) {
   const insets = useSafeAreaInsets();
   const { width } = useWindowDimensions();
-  const { featured: FEATURED, rows, movies, source, refresh } = useCatalog();
+  const { featured: FEATURED, rows, movies, continueWatching, source, refresh } = useCatalog();
   const [refreshing, setRefreshing] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
   const [query, setQuery] = useState('');
@@ -134,6 +134,39 @@ export default function HomeScreen({ navigation }: { navigation: Nav }) {
       </View>
 
       <View style={styles.rows}>
+        {continueWatching.length > 0 && (
+          <View style={styles.cwSection}>
+            <Text style={styles.cwTitle}>Kontynuuj oglądanie</Text>
+            <ScrollView
+              horizontal
+              showsHorizontalScrollIndicator={false}
+              contentContainerStyle={styles.cwScroll}
+            >
+              {continueWatching.map((c) => (
+                <TouchableOpacity
+                  key={c.movie.id}
+                  activeOpacity={0.85}
+                  style={styles.cwCard}
+                  onPress={() =>
+                    navigation.navigate('Player', { movieId: c.movie.id, resume: c.positionSeconds })
+                  }
+                >
+                  <Image source={c.movie.poster} style={styles.cwPoster} contentFit="cover" />
+                  <View style={styles.cwPlay}>
+                    <Ionicons name="play-circle" size={34} color="rgba(255,255,255,0.92)" />
+                  </View>
+                  <View style={styles.cwBar}>
+                    <View style={[styles.cwFill, { width: `${Math.round(c.percent * 100)}%` }]} />
+                  </View>
+                  <Text numberOfLines={1} style={styles.cwName}>
+                    {c.movie.title}
+                  </Text>
+                </TouchableOpacity>
+              ))}
+            </ScrollView>
+          </View>
+        )}
+
         {rows.map((row) => (
           <MovieRow
             key={row.title}
@@ -232,6 +265,15 @@ const styles = StyleSheet.create({
   searchInput: { flex: 1, color: colors.text, fontSize: 15, padding: 0 },
   searchHint: { flex: 1, alignItems: 'center', justifyContent: 'center', gap: spacing.sm, padding: spacing.xl },
   searchHintText: { color: colors.textMuted, fontSize: 14, fontWeight: '600' },
+  cwSection: { marginBottom: spacing.xl },
+  cwTitle: { color: colors.text, fontSize: 18, fontWeight: '700', paddingHorizontal: spacing.lg, marginBottom: spacing.md },
+  cwScroll: { paddingHorizontal: spacing.lg, gap: spacing.md },
+  cwCard: { width: 150 },
+  cwPoster: { width: 150, height: 90, borderRadius: radius.sm, backgroundColor: colors.surfaceAlt },
+  cwPlay: { position: 'absolute', top: 0, left: 0, right: 0, height: 90, alignItems: 'center', justifyContent: 'center' },
+  cwBar: { height: 3, backgroundColor: colors.border, borderRadius: 2, marginTop: 6, overflow: 'hidden' },
+  cwFill: { height: 3, backgroundColor: colors.primary },
+  cwName: { color: colors.textMuted, fontSize: 12, fontWeight: '600', marginTop: 5 },
   hero: { height: 520, justifyContent: 'space-between' },
   topBar: {
     flexDirection: 'row',

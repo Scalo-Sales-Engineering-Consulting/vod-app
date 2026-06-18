@@ -2,7 +2,7 @@
 // unreachable (offline, wrong BASE_URL), it transparently falls back to the
 // bundled open-movie catalog so the app still renders.
 import React, { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
-import { fetchRows, fetchGenres, fetchCatalog, type Row } from '../lib/api';
+import { fetchRows, fetchGenres, fetchCatalog, fetchContinue, type Row, type ContinueItem } from '../lib/api';
 import { MOVIES, ROWS, GENRES, type Movie } from '../data/movies';
 
 type Source = 'loading' | 'backend' | 'fallback';
@@ -12,6 +12,7 @@ type CatalogValue = {
   rows: Row[];
   genres: string[];
   featured: Movie | null;
+  continueWatching: ContinueItem[];
   getMovie: (id: string) => Movie | undefined;
   source: Source;
   error: string | null;
@@ -35,12 +36,15 @@ export function CatalogProvider({ children }: { children: React.ReactNode }) {
   const [genres, setGenres] = useState<string[]>(['All']);
   const [source, setSource] = useState<Source>('loading');
   const [error, setError] = useState<string | null>(null);
+  const [continueWatching, setContinueWatching] = useState<ContinueItem[]>([]);
   const [nonce, setNonce] = useState(0);
 
   // Core fetch. `silent` keeps the current UI on screen while refetching in the
   // background (used on screen focus); otherwise it shows the loading spinner.
   const fetchAll = useCallback(async (silent: boolean) => {
     if (!silent) setSource('loading');
+    // Continue Watching is best-effort (independent of catalog).
+    fetchContinue().then(setContinueWatching).catch(() => {});
     try {
       const [r, g, c] = await Promise.all([fetchRows(), fetchGenres(), fetchCatalog()]);
       setRows(r);
@@ -79,13 +83,14 @@ export function CatalogProvider({ children }: { children: React.ReactNode }) {
       rows,
       genres,
       featured: rows[0]?.movies[0] ?? movies[0] ?? null,
+      continueWatching,
       getMovie: (id: string) => byId.get(id),
       source,
       error,
       reload: () => setNonce((n) => n + 1),
       refresh: () => fetchAll(true),
     }),
-    [movies, rows, genres, byId, source, error, fetchAll],
+    [movies, rows, genres, continueWatching, byId, source, error, fetchAll],
   );
 
   return <CatalogContext.Provider value={value}>{children}</CatalogContext.Provider>;

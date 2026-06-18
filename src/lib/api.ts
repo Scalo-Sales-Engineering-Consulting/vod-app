@@ -188,3 +188,38 @@ export async function uploadPoster(id: string, poster: FilePick): Promise<VideoW
 export async function deleteVideo(id: string): Promise<void> {
   await authedSend<void>(`/videos/${id}`, 'DELETE', '', false);
 }
+
+// ---- library: My List + Continue Watching (server-side, synced) ----
+
+export async function fetchMyList(): Promise<Movie[]> {
+  const items = await authed<VideoWithStream[]>('/me/list');
+  return items.map(mapVideo);
+}
+
+export async function addToList(id: string): Promise<void> {
+  await authedSend<void>(`/me/list/${id}`, 'PUT', '', false);
+}
+
+export async function removeFromList(id: string): Promise<void> {
+  await authedSend<void>(`/me/list/${id}`, 'DELETE', '', false);
+}
+
+export type ContinueItem = { movie: Movie; positionSeconds: number; percent: number };
+
+export async function fetchContinue(): Promise<ContinueItem[]> {
+  const rows = await authed<
+    { video: VideoWithStream; position_seconds: number; percent: number }[]
+  >('/me/continue');
+  return rows.map((r) => ({
+    movie: mapVideo(r.video),
+    positionSeconds: r.position_seconds,
+    percent: r.percent > 1 ? r.percent / 100 : r.percent, // backend sends 0..100
+  }));
+}
+
+// Save playback position. Fire-and-forget friendly (caller may ignore errors).
+export async function putProgress(id: string, positionSeconds: number, durationSeconds?: number): Promise<void> {
+  const body: Record<string, number> = { position_seconds: Math.max(0, Math.floor(positionSeconds)) };
+  if (durationSeconds && durationSeconds > 0) body.duration_seconds = Math.floor(durationSeconds);
+  await authedSend<void>(`/me/progress/${id}`, 'PUT', JSON.stringify(body), true);
+}

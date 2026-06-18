@@ -19,6 +19,7 @@ import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import type { RouteProp } from '@react-navigation/native';
 import { colors, spacing } from '../theme';
 import { useCatalog } from '../context/CatalogContext';
+import { putProgress } from '../lib/api';
 import type { RootStackParamList } from '../navigation/types';
 
 type Nav = NativeStackNavigationProp<RootStackParamList, 'Player'>;
@@ -62,15 +63,36 @@ export default function PlayerScreen({ navigation, route }: { navigation: Nav; r
 
   const total = hasTrailer ? vidTotal : movie ? durationToSeconds(movie.duration) : 0;
 
-  // Autoplay the trailer on mount.
+  // Autoplay on mount; resume from the saved position if we were handed one.
   useEffect(() => {
     if (hasTrailer) {
       try {
+        const resume = route.params.resume;
+        if (resume && resume > 1) player.currentTime = resume;
         player.play();
       } catch {}
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  // Report playback position to the backend (Continue Watching), every few
+  // seconds and once more on unmount with the latest position.
+  useEffect(() => {
+    if (!hasTrailer || !movie) return;
+    const report = () => {
+      try {
+        const pos = player.currentTime ?? 0;
+        const dur = player.duration || undefined;
+        if (pos > 1) putProgress(movie.id, pos, dur).catch(() => {});
+      } catch {}
+    };
+    const id = setInterval(report, 5000);
+    return () => {
+      clearInterval(id);
+      report();
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [hasTrailer, movie?.id]);
 
   // Clock: poll the real player when there's a trailer; otherwise simulate.
   useEffect(() => {
