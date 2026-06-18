@@ -32,7 +32,7 @@ const SEARCH_PAD = spacing.lg;
 export default function HomeScreen({ navigation }: { navigation: Nav }) {
   const insets = useSafeAreaInsets();
   const { width } = useWindowDimensions();
-  const { featured: FEATURED, rows, movies, continueWatching, top10, becauseYouWatched, source, refresh } =
+  const { featured: FEATURED, rows, movies, continueWatching, top10, becauseYouWatched, series, source, refresh } =
     useCatalog();
   const [refreshing, setRefreshing] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
@@ -174,6 +174,28 @@ export default function HomeScreen({ navigation }: { navigation: Nav }) {
             movies={becauseYouWatched.movies}
             onPressMovie={openDetail}
           />
+        )}
+
+        {series.length > 0 && (
+          <View style={styles.cwSection}>
+            <Text style={styles.cwTitle}>Seriale</Text>
+            <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.cwScroll}>
+              {series.map((s) => (
+                <TouchableOpacity
+                  key={s.id}
+                  activeOpacity={0.85}
+                  style={styles.seriesCard}
+                  onPress={() => navigation.navigate('SeriesDetail', { seriesId: s.id })}
+                >
+                  <Image source={s.poster} style={styles.seriesPoster} contentFit="cover" />
+                  <View style={styles.seriesBadge}>
+                    <Text style={styles.seriesBadgeText}>SERIAL</Text>
+                  </View>
+                  <Text numberOfLines={1} style={styles.cwName}>{s.title}</Text>
+                </TouchableOpacity>
+              ))}
+            </ScrollView>
+          </View>
         )}
 
         {top10.length > 0 && (
@@ -319,6 +341,10 @@ const styles = StyleSheet.create({
     textShadowRadius: 1,
   },
   topPoster: { width: 92, height: 138, borderRadius: radius.sm, backgroundColor: colors.surfaceAlt },
+  seriesCard: { width: 110 },
+  seriesPoster: { width: 110, height: 165, borderRadius: radius.sm, backgroundColor: colors.surfaceAlt },
+  seriesBadge: { position: 'absolute', top: 6, left: 6, backgroundColor: colors.primary, paddingHorizontal: 6, paddingVertical: 2, borderRadius: 4 },
+  seriesBadgeText: { color: colors.onPrimary, fontSize: 9, fontWeight: '900' },
   hero: { height: 520, justifyContent: 'space-between' },
   topBar: {
     flexDirection: 'row',

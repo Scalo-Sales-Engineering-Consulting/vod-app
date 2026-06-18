@@ -45,7 +45,8 @@ function fmt(sec: number): string {
 export default function PlayerScreen({ navigation, route }: { navigation: Nav; route: Rt }) {
   const { width, height } = useWindowDimensions();
   const { getMovie } = useCatalog();
-  const movie = getMovie(route.params.movieId);
+  // Episodes aren't in the catalog list, so accept a movie passed via params.
+  const movie = getMovie(route.params.movieId) ?? route.params.movie;
   const hasTrailer = !!movie?.trailer;
 
   // Real video player (expo-video). Source may be null for films without a trailer.

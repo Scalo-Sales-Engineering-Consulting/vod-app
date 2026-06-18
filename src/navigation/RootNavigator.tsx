@@ -11,6 +11,7 @@ import ManageScreen from '../screens/ManageScreen';
 import DetailScreen from '../screens/DetailScreen';
 import PlayerScreen from '../screens/PlayerScreen';
 import VideoFormScreen from '../screens/VideoFormScreen';
+import SeriesDetailScreen from '../screens/SeriesDetailScreen';
 import type { RootStackParamList, TabsParamList } from './types';
 
 const Tab = createBottomTabNavigator<TabsParamList>();
@@ -58,6 +59,7 @@ export default function RootNavigator() {
     <Stack.Navigator screenOptions={{ headerShown: false, contentStyle: { backgroundColor: colors.background } }}>
       <Stack.Screen name="Tabs" component={Tabs} />
       <Stack.Screen name="Detail" component={DetailScreen} options={{ animation: 'slide_from_right' }} />
+      <Stack.Screen name="SeriesDetail" component={SeriesDetailScreen} options={{ animation: 'slide_from_right' }} />
       <Stack.Screen
         name="Player"
         component={PlayerScreen}

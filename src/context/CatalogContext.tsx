@@ -9,8 +9,10 @@ import {
   fetchContinue,
   fetchTop10,
   fetchBecauseYouWatched,
+  fetchSeries,
   type Row,
   type ContinueItem,
+  type SeriesSummary,
 } from '../lib/api';
 import { MOVIES, ROWS, GENRES, type Movie } from '../data/movies';
 import { useProfile } from './ProfileContext';
@@ -25,6 +27,7 @@ type CatalogValue = {
   continueWatching: ContinueItem[];
   top10: Movie[];
   becauseYouWatched: Row | null;
+  series: SeriesSummary[];
   getMovie: (id: string) => Movie | undefined;
   source: Source;
   error: string | null;
@@ -51,6 +54,7 @@ export function CatalogProvider({ children }: { children: React.ReactNode }) {
   const [continueWatching, setContinueWatching] = useState<ContinueItem[]>([]);
   const [top10, setTop10] = useState<Movie[]>([]);
   const [becauseYouWatched, setBecauseYouWatched] = useState<Row | null>(null);
+  const [series, setSeries] = useState<SeriesSummary[]>([]);
   const [nonce, setNonce] = useState(0);
 
   // Core fetch. `silent` keeps the current UI on screen while refetching in the
@@ -61,6 +65,7 @@ export function CatalogProvider({ children }: { children: React.ReactNode }) {
     fetchContinue().then(setContinueWatching).catch(() => {});
     fetchTop10().then(setTop10).catch(() => {});
     fetchBecauseYouWatched().then(setBecauseYouWatched).catch(() => {});
+    fetchSeries().then(setSeries).catch(() => {});
     try {
       const [r, g, c] = await Promise.all([fetchRows(), fetchGenres(), fetchCatalog()]);
       setRows(r);
@@ -109,13 +114,14 @@ export function CatalogProvider({ children }: { children: React.ReactNode }) {
       continueWatching,
       top10,
       becauseYouWatched,
+      series,
       getMovie: (id: string) => byId.get(id),
       source,
       error,
       reload: () => setNonce((n) => n + 1),
       refresh: () => fetchAll(true),
     }),
-    [movies, rows, genres, continueWatching, top10, becauseYouWatched, byId, source, error, fetchAll],
+    [movies, rows, genres, continueWatching, top10, becauseYouWatched, series, byId, source, error, fetchAll],
   );
 
   return <CatalogContext.Provider value={value}>{children}</CatalogContext.Provider>;

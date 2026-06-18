@@ -21,6 +21,8 @@ export type VideoWithStream = {
   stream_url: string | null;
   poster_url: string | null;
   updated_at: string | null;
+  episode_number?: number | null;
+  episode_title?: string;
 };
 type CatalogRow = { genre: string; items: VideoWithStream[] };
 export type GenreCount = { id: string; name: string; count: number };
@@ -103,6 +105,8 @@ export function mapVideo(v: VideoWithStream): Movie {
     poster,
     backdrop: poster, // backend has no separate backdrop — reuse poster
     trailer: v.status === 'ready' ? abs(v.stream_url) : undefined, // HLS master.m3u8
+    episodeNumber: v.episode_number ?? undefined,
+    episodeTitle: v.episode_title || undefined,
   };
 }
 
@@ -242,6 +246,57 @@ export async function fetchContinue(): Promise<ContinueItem[]> {
     positionSeconds: r.position_seconds,
     percent: r.percent > 1 ? r.percent / 100 : r.percent, // backend sends 0..100
   }));
+}
+
+// ---- series ----
+
+export type SeriesSummary = {
+  id: string;
+  title: string;
+  description: string;
+  year: number;
+  maturity: string;
+  poster: string;
+  episodeCount: number;
+};
+export type Season = { number: number; episodes: Movie[] };
+export type SeriesDetail = SeriesSummary & { seasons: Season[] };
+
+type SeriesOutRaw = {
+  id: string;
+  title: string;
+  description: string;
+  release_year: number | null;
+  maturity_rating: string;
+  poster_url: string | null;
+  episode_count: number;
+};
+
+function mapSeries(s: SeriesOutRaw): SeriesSummary {
+  return {
+    id: s.id,
+    title: s.title,
+    description: s.description ?? '',
+    year: s.release_year ?? 0,
+    maturity: s.maturity_rating || 'All',
+    poster: abs(s.poster_url) ?? '',
+    episodeCount: s.episode_count,
+  };
+}
+
+export async function fetchSeries(): Promise<SeriesSummary[]> {
+  const rows = await authed<SeriesOutRaw[]>('/series');
+  return rows.map(mapSeries);
+}
+
+export async function fetchSeriesDetail(id: string): Promise<SeriesDetail> {
+  const d = await authed<SeriesOutRaw & { seasons: { number: number; episodes: VideoWithStream[] }[] }>(
+    `/series/${id}`,
+  );
+  return {
+    ...mapSeries(d),
+    seasons: d.seasons.map((s) => ({ number: s.number, episodes: s.episodes.map(mapVideo) })),
+  };
 }
 
 // ---- profiles ----

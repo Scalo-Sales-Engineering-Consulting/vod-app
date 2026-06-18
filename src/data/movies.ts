@@ -14,6 +14,8 @@ export type Movie = {
   poster: string;
   backdrop: string;
   trailer?: string; // real mp4 stream (optional)
+  episodeNumber?: number; // set when this Movie is a series episode
+  episodeTitle?: string;
 };
 
 export const GENRES = [
