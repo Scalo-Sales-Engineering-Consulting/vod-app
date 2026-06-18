@@ -41,9 +41,24 @@ async function login(): Promise<string> {
   return token;
 }
 
+// Active profile (Netflix-style). Sent as X-Profile-Id so the backend scopes
+// My List / Continue Watching / recommendations to it.
+let activeProfileId: string | null = null;
+export function setActiveProfile(id: string | null): void {
+  activeProfileId = id;
+}
+export function getActiveProfile(): string | null {
+  return activeProfileId;
+}
+function profileHeaders(base: Record<string, string>): Record<string, string> {
+  return activeProfileId ? { ...base, 'X-Profile-Id': activeProfileId } : base;
+}
+
 async function authed<T>(path: string): Promise<T> {
   const t = await login();
-  const res = await fetch(`${BASE_URL}${path}`, { headers: { Authorization: `Bearer ${t}` } });
+  const res = await fetch(`${BASE_URL}${path}`, {
+    headers: profileHeaders({ Authorization: `Bearer ${t}` }),
+  });
   if (!res.ok) throw new Error(`GET ${path} → ${res.status}`);
   return res.json() as Promise<T>;
 }
@@ -154,7 +169,7 @@ type FilePick = { uri: string; name: string; type: string };
 
 async function authedSend<T>(path: string, method: string, body: FormData | string, isJson: boolean): Promise<T> {
   const t = await login();
-  const headers: Record<string, string> = { Authorization: `Bearer ${t}` };
+  const headers: Record<string, string> = profileHeaders({ Authorization: `Bearer ${t}` });
   if (isJson) headers['Content-Type'] = 'application/json';
   // For FormData, do NOT set Content-Type — RN sets the multipart boundary itself.
   const res = await fetch(`${BASE_URL}${path}`, { method, headers, body });
@@ -227,6 +242,22 @@ export async function fetchContinue(): Promise<ContinueItem[]> {
     positionSeconds: r.position_seconds,
     percent: r.percent > 1 ? r.percent / 100 : r.percent, // backend sends 0..100
   }));
+}
+
+// ---- profiles ----
+
+export type Profile = { id: string; name: string; is_kids: boolean; avatar: string };
+
+export async function fetchProfiles(): Promise<Profile[]> {
+  return authed<Profile[]>('/profiles');
+}
+
+export async function createProfile(name: string, isKids = false, avatar = '#5CE38B'): Promise<Profile> {
+  return authedSend<Profile>('/profiles', 'POST', JSON.stringify({ name, is_kids: isKids, avatar }), true);
+}
+
+export async function deleteProfile(id: string): Promise<void> {
+  await authedSend<void>(`/profiles/${id}`, 'DELETE', '', false);
 }
 
 // Save playback position. Fire-and-forget friendly (caller may ignore errors).

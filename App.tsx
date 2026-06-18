@@ -6,6 +6,7 @@ import { NavigationContainer, DarkTheme, type LinkingOptions } from '@react-navi
 import { colors } from './src/theme';
 import { FavoritesProvider } from './src/context/FavoritesContext';
 import { CatalogProvider } from './src/context/CatalogContext';
+import { ProfileProvider } from './src/context/ProfileContext';
 import RootNavigator from './src/navigation/RootNavigator';
 import type { RootStackParamList } from './src/navigation/types';
 
@@ -37,14 +38,16 @@ const linking: LinkingOptions<RootStackParamList> = {
 export default function App() {
   return (
     <SafeAreaProvider>
-      <CatalogProvider>
-        <FavoritesProvider>
-          <NavigationContainer theme={navTheme} linking={linking}>
-            <StatusBar style="light" />
-            <RootNavigator />
-          </NavigationContainer>
-        </FavoritesProvider>
-      </CatalogProvider>
+      <ProfileProvider>
+        <CatalogProvider>
+          <FavoritesProvider>
+            <NavigationContainer theme={navTheme} linking={linking}>
+              <StatusBar style="light" />
+              <RootNavigator />
+            </NavigationContainer>
+          </FavoritesProvider>
+        </CatalogProvider>
+      </ProfileProvider>
     </SafeAreaProvider>
   );
 }

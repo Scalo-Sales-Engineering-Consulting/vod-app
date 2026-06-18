@@ -13,6 +13,7 @@ import {
   type ContinueItem,
 } from '../lib/api';
 import { MOVIES, ROWS, GENRES, type Movie } from '../data/movies';
+import { useProfile } from './ProfileContext';
 
 type Source = 'loading' | 'backend' | 'fallback';
 
@@ -89,6 +90,13 @@ export function CatalogProvider({ children }: { children: React.ReactNode }) {
       cancelled = true;
     };
   }, [nonce, fetchAll]);
+
+  // Re-pull personalized rows when the active profile changes.
+  const { activeId } = useProfile();
+  useEffect(() => {
+    if (activeId) fetchAll(true);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [activeId]);
 
   const byId = useMemo(() => new Map(movies.map((m) => [m.id, m])), [movies]);
 

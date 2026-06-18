@@ -1,5 +1,6 @@
 import React, { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
 import { fetchMyList, addToList, removeFromList } from '../lib/api';
+import { useProfile } from './ProfileContext';
 
 type FavoritesContextValue = {
   favorites: string[];
@@ -25,9 +26,10 @@ export function FavoritesProvider({ children }: { children: React.ReactNode }) {
     }
   }, []);
 
+  const { activeId } = useProfile();
   useEffect(() => {
     refresh();
-  }, [refresh]);
+  }, [refresh, activeId]);
 
   const toggleFavorite = useCallback((id: string) => {
     setFavorites((prev) => {
