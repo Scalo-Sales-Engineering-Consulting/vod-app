@@ -61,8 +61,8 @@ export default function DetailScreen({ navigation, route }: { navigation: Nav; r
           pointerEvents="none"
         />
         <LinearGradient
-          colors={['transparent', withAlpha(colors.background, 0.15), withAlpha(colors.background, 0.45), colors.background]}
-          locations={[0, 0.62, 0.86, 1]}
+          colors={['transparent', withAlpha(colors.background, 0.35), withAlpha(colors.background, 0.9), colors.background]}
+          locations={[0, 0.48, 0.78, 1]}
           style={StyleSheet.absoluteFill}
           pointerEvents="none"
         />
@@ -154,7 +154,7 @@ export default function DetailScreen({ navigation, route }: { navigation: Nav; r
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.background },
   center: { alignItems: 'center', justifyContent: 'center' },
-  hero: { height: 620, backgroundColor: colors.background },
+  hero: { height: 540, backgroundColor: colors.background },
   heroTopFade: { position: 'absolute', top: 0, left: 0, right: 0 },
   back: {
     position: 'absolute',
@@ -166,8 +166,8 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  body: { paddingHorizontal: spacing.lg, marginTop: -40 },
-  title: { color: colors.text, fontSize: 28, fontWeight: '900' },
+  body: { paddingHorizontal: spacing.lg, marginTop: -64 },
+  title: { color: colors.text, fontSize: 22, fontWeight: '900' },
   metaRow: { flexDirection: 'row', alignItems: 'center', gap: spacing.md, marginTop: spacing.sm },
   ratingRow: { flexDirection: 'row', alignItems: 'center', gap: 4 },
   rating: { color: colors.text, fontSize: 14, fontWeight: '700' },
@@ -196,7 +196,7 @@ const styles = StyleSheet.create({
   actions: { flexDirection: 'row', justifyContent: 'space-around', marginTop: spacing.lg },
   action: { alignItems: 'center', gap: 4 },
   actionText: { color: colors.textMuted, fontSize: 12, fontWeight: '600' },
-  description: { color: colors.text, fontSize: 14, lineHeight: 21, marginTop: spacing.xl, opacity: 0.9 },
-  similar: { marginTop: spacing.xl },
+  description: { color: colors.text, fontSize: 14, lineHeight: 21, marginTop: spacing.md, opacity: 0.9 },
+  similar: { marginTop: spacing.lg },
   similarTitle: { color: colors.text, fontSize: 18, fontWeight: '700', marginBottom: spacing.md },
 });
