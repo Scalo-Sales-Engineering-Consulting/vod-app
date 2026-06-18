@@ -13,6 +13,7 @@ export type Movie = {
   description: string;
   poster: string;
   backdrop: string;
+  posterColor?: string; // #rrggbb sampled from the poster top, for seamless hero gradients
   trailer?: string; // real mp4 stream (optional)
   episodeNumber?: number; // set when this Movie is a series episode
   episodeTitle?: string;

@@ -53,6 +53,7 @@ export default function SeriesDetailScreen({ navigation, route }: { navigation: 
   }
 
   const data = state.data;
+  const tint = data.posterColor || colors.background;
   const current = data.seasons.find((s) => s.number === season) ?? data.seasons[0];
   const firstEp = current?.episodes[0];
 
@@ -63,12 +64,13 @@ export default function SeriesDetailScreen({ navigation, route }: { navigation: 
 
   return (
     <ScrollView style={styles.container} contentContainerStyle={{ paddingBottom: spacing.xxl }} showsVerticalScrollIndicator={false}>
-      <View style={[styles.hero, { paddingTop: insets.top }]}>
-        {/* Below the safe area + top-anchored so the Dynamic Island doesn't cover
-            the poster and faces aren't cropped out the top. */}
+      <View style={[styles.hero, { paddingTop: insets.top, backgroundColor: tint }]}>
+        {/* Strip above the poster filled with its top colour + matching top fade,
+            so the poster reads as one piece with the area above it. */}
         <View style={styles.heroImage}>
           <Image source={data.poster} style={StyleSheet.absoluteFill} contentFit="cover" contentPosition="top" transition={150} />
-          <LinearGradient colors={['rgba(11,11,15,0.15)', 'rgba(11,11,15,0.55)', colors.background]} style={StyleSheet.absoluteFill} />
+          <LinearGradient colors={[tint, 'transparent']} style={styles.heroTopFade} pointerEvents="none" />
+          <LinearGradient colors={['transparent', 'rgba(11,11,15,0.55)', colors.background]} style={StyleSheet.absoluteFill} />
         </View>
         <TouchableOpacity style={[styles.back, { top: insets.top + spacing.sm }]} onPress={() => navigation.goBack()} hitSlop={10}>
           <Ionicons name="chevron-back" size={26} color={colors.text} />
@@ -134,6 +136,7 @@ const styles = StyleSheet.create({
   backLink: { color: colors.textMuted, marginTop: spacing.md },
   hero: { height: 320, backgroundColor: colors.background },
   heroImage: { flex: 1 },
+  heroTopFade: { position: 'absolute', top: 0, left: 0, right: 0, height: 96 },
   back: { position: 'absolute', left: spacing.lg, width: 38, height: 38, borderRadius: radius.pill, backgroundColor: colors.overlay, alignItems: 'center', justifyContent: 'center' },
   body: { paddingHorizontal: spacing.lg, marginTop: -30 },
   title: { color: colors.text, fontSize: 26, fontWeight: '900' },

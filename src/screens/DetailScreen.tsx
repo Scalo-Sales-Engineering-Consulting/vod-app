@@ -35,6 +35,7 @@ export default function DetailScreen({ navigation, route }: { navigation: Nav; r
     );
   }
 
+  const tint = movie.posterColor || colors.background;
   const fav = isFavorite(movie.id);
   const similar = movies
     .filter((m) => m.id !== movie.id && m.genres.some((g) => movie.genres.includes(g)))
@@ -46,14 +47,19 @@ export default function DetailScreen({ navigation, route }: { navigation: Nav; r
       contentContainerStyle={{ paddingBottom: spacing.xxl }}
       showsVerticalScrollIndicator={false}
     >
-      <View style={[styles.hero, { paddingTop: insets.top }]}>
-        {/* Image starts below the safe area so the Dynamic Island / notch never
-            covers the poster, and contentPosition="top" keeps faces in frame
-            instead of center-cropping heads off. */}
+      <View style={[styles.hero, { paddingTop: insets.top, backgroundColor: tint }]}>
+        {/* The strip above the poster (safe-area / Dynamic Island) is filled with
+            the poster's own top colour, and a matching gradient fades over the
+            image top — so the poster and the area above it read as one piece. */}
         <View style={styles.heroImage}>
           <Image source={movie.backdrop} style={StyleSheet.absoluteFill} contentFit="cover" contentPosition="top" />
           <LinearGradient
-            colors={['rgba(11,11,15,0.15)', 'rgba(11,11,15,0.5)', colors.background]}
+            colors={[tint, 'transparent']}
+            style={styles.heroTopFade}
+            pointerEvents="none"
+          />
+          <LinearGradient
+            colors={['transparent', 'rgba(11,11,15,0.5)', colors.background]}
             style={StyleSheet.absoluteFill}
           />
         </View>
@@ -147,6 +153,7 @@ const styles = StyleSheet.create({
   center: { alignItems: 'center', justifyContent: 'center' },
   hero: { height: 380, backgroundColor: colors.background },
   heroImage: { flex: 1 },
+  heroTopFade: { position: 'absolute', top: 0, left: 0, right: 0, height: 96 },
   back: {
     position: 'absolute',
     left: spacing.lg,
