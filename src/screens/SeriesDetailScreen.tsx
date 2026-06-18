@@ -54,6 +54,7 @@ export default function SeriesDetailScreen({ navigation, route }: { navigation: 
 
   const data = state.data;
   const tint = data.posterColor || colors.background;
+  const focusPos = `${Math.round((data.posterFocusY ?? 0.3) * 100)}%`;
   const current = data.seasons.find((s) => s.number === season) ?? data.seasons[0];
   const firstEp = current?.episodes[0];
 
@@ -68,7 +69,7 @@ export default function SeriesDetailScreen({ navigation, route }: { navigation: 
         {/* Strip above the poster filled with its top colour + matching top fade,
             so the poster reads as one piece with the area above it. */}
         <View style={styles.heroImage}>
-          <Image source={data.poster} style={StyleSheet.absoluteFill} contentFit="cover" contentPosition="top" transition={150} />
+          <Image source={data.poster} style={StyleSheet.absoluteFill} contentFit="cover" contentPosition={{ top: focusPos }} transition={150} />
           <LinearGradient
             colors={[tint, withAlpha(tint, 0.85), withAlpha(tint, 0.4), 'transparent']}
             locations={[0, 0.35, 0.7, 1]}

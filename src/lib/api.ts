@@ -22,6 +22,7 @@ export type VideoWithStream = {
   stream_url: string | null;
   poster_url: string | null;
   poster_color?: string | null;
+  poster_focus_y?: number | null;
   updated_at: string | null;
   episode_number?: number | null;
   episode_title?: string;
@@ -393,6 +394,7 @@ export function mapVideo(v: VideoWithStream): Movie {
     poster,
     backdrop: poster, // backend has no separate backdrop — reuse poster
     posterColor: v.poster_color ?? undefined,
+    posterFocusY: v.poster_focus_y ?? undefined,
     trailer: v.status === 'ready' ? abs(v.stream_url) : undefined, // HLS master.m3u8
     episodeNumber: v.episode_number ?? undefined,
     episodeTitle: v.episode_title || undefined,
@@ -563,6 +565,7 @@ export type SeriesSummary = {
   maturity: string;
   poster: string;
   posterColor?: string;
+  posterFocusY?: number;
   episodeCount: number;
 };
 export type Season = { number: number; episodes: Movie[] };
@@ -576,6 +579,7 @@ type SeriesOutRaw = {
   maturity_rating: string;
   poster_url: string | null;
   poster_color?: string | null;
+  poster_focus_y?: number | null;
   episode_count: number;
 };
 
@@ -588,6 +592,7 @@ function mapSeries(s: SeriesOutRaw): SeriesSummary {
     maturity: s.maturity_rating || 'All',
     poster: abs(s.poster_url) ?? '',
     posterColor: s.poster_color ?? undefined,
+    posterFocusY: s.poster_focus_y ?? undefined,
     episodeCount: s.episode_count,
   };
 }

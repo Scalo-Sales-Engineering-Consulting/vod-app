@@ -36,6 +36,9 @@ export default function DetailScreen({ navigation, route }: { navigation: Nav; r
   }
 
   const tint = movie.posterColor || colors.background;
+  // Face-aware vertical crop: position the cover image on the poster's focal Y
+  // so faces aren't cut off the top or bottom.
+  const focusPos = `${Math.round((movie.posterFocusY ?? 0.3) * 100)}%`;
   const fav = isFavorite(movie.id);
   const similar = movies
     .filter((m) => m.id !== movie.id && m.genres.some((g) => movie.genres.includes(g)))
@@ -52,7 +55,7 @@ export default function DetailScreen({ navigation, route }: { navigation: Nav; r
             the poster's own top colour, and a matching gradient fades over the
             image top — so the poster and the area above it read as one piece. */}
         <View style={styles.heroImage}>
-          <Image source={movie.backdrop} style={StyleSheet.absoluteFill} contentFit="cover" contentPosition="top" />
+          <Image source={movie.backdrop} style={StyleSheet.absoluteFill} contentFit="cover" contentPosition={{ top: focusPos }} />
           <LinearGradient
             colors={[tint, withAlpha(tint, 0.85), withAlpha(tint, 0.4), 'transparent']}
             locations={[0, 0.35, 0.7, 1]}

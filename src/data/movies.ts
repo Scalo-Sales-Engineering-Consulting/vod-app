@@ -14,6 +14,7 @@ export type Movie = {
   poster: string;
   backdrop: string;
   posterColor?: string; // #rrggbb sampled from the poster top, for seamless hero gradients
+  posterFocusY?: number; // 0..1 vertical focal point (face-aware), for hero crop position
   trailer?: string; // real mp4 stream (optional)
   episodeNumber?: number; // set when this Movie is a series episode
   episodeTitle?: string;
