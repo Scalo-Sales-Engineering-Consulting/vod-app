@@ -49,23 +49,23 @@ export default function DetailScreen({ navigation, route }: { navigation: Nav; r
       contentContainerStyle={{ paddingBottom: spacing.xxl }}
       showsVerticalScrollIndicator={false}
     >
-      <View style={[styles.hero, { paddingTop: insets.top }]}>
-        {/* Dark background above the poster + a light gradient fading the image
-            top into it (status-bar / Dynamic Island area). */}
-        <View style={styles.heroImage}>
-          <Image source={movie.backdrop} style={StyleSheet.absoluteFill} contentFit="cover" contentPosition={{ top: focusPos }} />
-          <LinearGradient
-            colors={[withAlpha(colors.background, 0.5), withAlpha(colors.background, 0.25), 'transparent']}
-            locations={[0, 0.5, 1]}
-            style={styles.heroTopFade}
-            pointerEvents="none"
-          />
-          <LinearGradient
-            colors={['transparent', withAlpha(colors.background, 0.15), withAlpha(colors.background, 0.45), colors.background]}
-            locations={[0, 0.62, 0.86, 1]}
-            style={StyleSheet.absoluteFill}
-          />
-        </View>
+      <View style={styles.hero}>
+        {/* Full-bleed poster (runs under the status bar / Dynamic Island). A dark
+            top gradient fades smoothly over the island area into the poster — no
+            solid bar, no hard edge. */}
+        <Image source={movie.backdrop} style={StyleSheet.absoluteFill} contentFit="cover" contentPosition={{ top: focusPos }} />
+        <LinearGradient
+          colors={[withAlpha(colors.background, 0.85), withAlpha(colors.background, 0.4), 'transparent']}
+          locations={[0, 0.5, 1]}
+          style={[styles.heroTopFade, { height: insets.top + 80 }]}
+          pointerEvents="none"
+        />
+        <LinearGradient
+          colors={['transparent', withAlpha(colors.background, 0.15), withAlpha(colors.background, 0.45), colors.background]}
+          locations={[0, 0.62, 0.86, 1]}
+          style={StyleSheet.absoluteFill}
+          pointerEvents="none"
+        />
         <TouchableOpacity
           style={[styles.back, { top: insets.top + spacing.sm }]}
           onPress={() => navigation.goBack()}
@@ -155,8 +155,7 @@ const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.background },
   center: { alignItems: 'center', justifyContent: 'center' },
   hero: { height: 620, backgroundColor: colors.background },
-  heroImage: { flex: 1 },
-  heroTopFade: { position: 'absolute', top: 0, left: 0, right: 0, height: 90 },
+  heroTopFade: { position: 'absolute', top: 0, left: 0, right: 0 },
   back: {
     position: 'absolute',
     left: spacing.lg,

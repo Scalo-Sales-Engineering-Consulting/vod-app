@@ -64,22 +64,22 @@ export default function SeriesDetailScreen({ navigation, route }: { navigation: 
 
   return (
     <ScrollView style={styles.container} contentContainerStyle={{ paddingBottom: spacing.xxl }} showsVerticalScrollIndicator={false}>
-      <View style={[styles.hero, { paddingTop: insets.top }]}>
-        {/* Dark background above the poster + a light top fade into it. */}
-        <View style={styles.heroImage}>
-          <Image source={data.poster} style={StyleSheet.absoluteFill} contentFit="cover" contentPosition={{ top: focusPos }} transition={150} />
-          <LinearGradient
-            colors={[withAlpha(colors.background, 0.5), withAlpha(colors.background, 0.25), 'transparent']}
-            locations={[0, 0.5, 1]}
-            style={styles.heroTopFade}
-            pointerEvents="none"
-          />
-          <LinearGradient
-            colors={['transparent', withAlpha(colors.background, 0.15), withAlpha(colors.background, 0.45), colors.background]}
-            locations={[0, 0.62, 0.86, 1]}
-            style={StyleSheet.absoluteFill}
-          />
-        </View>
+      <View style={styles.hero}>
+        {/* Full-bleed poster under the status bar; dark top gradient fades over
+            the island area into the poster — no solid bar, no hard edge. */}
+        <Image source={data.poster} style={StyleSheet.absoluteFill} contentFit="cover" contentPosition={{ top: focusPos }} transition={150} />
+        <LinearGradient
+          colors={[withAlpha(colors.background, 0.85), withAlpha(colors.background, 0.4), 'transparent']}
+          locations={[0, 0.5, 1]}
+          style={[styles.heroTopFade, { height: insets.top + 80 }]}
+          pointerEvents="none"
+        />
+        <LinearGradient
+          colors={['transparent', withAlpha(colors.background, 0.15), withAlpha(colors.background, 0.45), colors.background]}
+          locations={[0, 0.62, 0.86, 1]}
+          style={StyleSheet.absoluteFill}
+          pointerEvents="none"
+        />
         <TouchableOpacity style={[styles.back, { top: insets.top + spacing.sm }]} onPress={() => navigation.goBack()} hitSlop={10}>
           <Ionicons name="chevron-back" size={26} color={colors.text} />
         </TouchableOpacity>
@@ -143,8 +143,7 @@ const styles = StyleSheet.create({
   retryText: { color: colors.text, fontWeight: '700' },
   backLink: { color: colors.textMuted, marginTop: spacing.md },
   hero: { height: 590, backgroundColor: colors.background },
-  heroImage: { flex: 1 },
-  heroTopFade: { position: 'absolute', top: 0, left: 0, right: 0, height: 90 },
+  heroTopFade: { position: 'absolute', top: 0, left: 0, right: 0 },
   back: { position: 'absolute', left: spacing.lg, width: 38, height: 38, borderRadius: radius.pill, backgroundColor: colors.overlay, alignItems: 'center', justifyContent: 'center' },
   body: { paddingHorizontal: spacing.lg, marginTop: -30 },
   title: { color: colors.text, fontSize: 26, fontWeight: '900' },
