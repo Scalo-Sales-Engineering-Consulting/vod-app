@@ -47,6 +47,7 @@ export default function HomeScreen({ navigation }: { navigation: Nav }) {
   const [query, setQuery] = useState('');
   const [heroIndex, setHeroIndex] = useState(0);
   const heroRef = useRef<FlatList<Movie>>(null);
+  const rawPos = useRef(1); // position within the looped list (1 = first real item)
 
   // Hero card geometry (Disney+-style card with peeking neighbours).
   const CARD_W = Math.round(width - 56);
@@ -57,6 +58,14 @@ export default function HomeScreen({ navigation }: { navigation: Nav }) {
   const openDetail = (movieId: string) => navigation.navigate('Detail', { movieId });
 
   const heroItems = useMemo<Movie[]>(() => (top10.length ? top10 : movies).slice(0, 10), [top10, movies]);
+  // For infinite looping, clone last item at the front and first at the back:
+  // [lastClone, ...items, firstClone]. Start at index 1; jump across the seam
+  // (no animation) when a clone is reached.
+  const loop = heroItems.length > 1;
+  const loopData = useMemo<Movie[]>(
+    () => (loop ? [heroItems[heroItems.length - 1], ...heroItems, heroItems[0]] : heroItems),
+    [heroItems, loop],
+  );
 
   useFocusEffect(useCallback(() => { refresh(); }, [refresh]));
   const onRefresh = useCallback(async () => {
@@ -66,19 +75,25 @@ export default function HomeScreen({ navigation }: { navigation: Nav }) {
   }, [refresh]);
 
   useEffect(() => {
-    if (tab !== 'movies' || heroItems.length < 2 || searchOpen) return;
+    if (tab !== 'movies' || !loop || searchOpen) return;
     const id = setInterval(() => {
-      setHeroIndex((i) => {
-        const next = (i + 1) % heroItems.length;
-        heroRef.current?.scrollToOffset({ offset: next * SNAP, animated: true });
-        return next;
-      });
+      heroRef.current?.scrollToOffset({ offset: (rawPos.current + 1) * SNAP, animated: true });
     }, 5000);
     return () => clearInterval(id);
-  }, [tab, heroItems.length, searchOpen, SNAP]);
+  }, [tab, loop, searchOpen, SNAP]);
 
-  const onHeroScroll = (e: NativeSyntheticEvent<NativeScrollEvent>) =>
-    setHeroIndex(Math.round(e.nativeEvent.contentOffset.x / SNAP));
+  const onHeroMomentum = (e: NativeSyntheticEvent<NativeScrollEvent>) => {
+    const n = heroItems.length;
+    let raw = Math.round(e.nativeEvent.contentOffset.x / SNAP);
+    if (loop) {
+      if (raw === 0) { raw = n; heroRef.current?.scrollToOffset({ offset: raw * SNAP, animated: false }); }
+      else if (raw === n + 1) { raw = 1; heroRef.current?.scrollToOffset({ offset: raw * SNAP, animated: false }); }
+      rawPos.current = raw;
+      setHeroIndex(((raw - 1) % n + n) % n);
+    } else {
+      setHeroIndex(raw);
+    }
+  };
 
   const results = useMemo(() => {
     const q = query.trim().toLowerCase();
@@ -148,14 +163,15 @@ export default function HomeScreen({ navigation }: { navigation: Nav }) {
         <View>
           <FlatList
             ref={heroRef}
-            data={heroItems}
-            keyExtractor={(m) => m.id}
+            data={loopData}
+            keyExtractor={(_, i) => String(i)}
             horizontal
             showsHorizontalScrollIndicator={false}
             snapToInterval={SNAP}
             decelerationRate="fast"
             contentContainerStyle={{ paddingHorizontal: SIDE }}
-            onMomentumScrollEnd={onHeroScroll}
+            contentOffset={{ x: loop ? SNAP : 0, y: 0 }}
+            onMomentumScrollEnd={onHeroMomentum}
             renderItem={HeroCard}
           />
           <View style={styles.dots}>
