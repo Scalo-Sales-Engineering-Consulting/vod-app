@@ -13,7 +13,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import type { RouteProp } from '@react-navigation/native';
-import { colors, radius, spacing } from '../theme';
+import { colors, radius, spacing, withAlpha } from '../theme';
 import { fetchSeriesDetail, type SeriesDetail } from '../lib/api';
 import type { Movie } from '../data/movies';
 import type { RootStackParamList } from '../navigation/types';
@@ -69,8 +69,17 @@ export default function SeriesDetailScreen({ navigation, route }: { navigation: 
             so the poster reads as one piece with the area above it. */}
         <View style={styles.heroImage}>
           <Image source={data.poster} style={StyleSheet.absoluteFill} contentFit="cover" contentPosition="top" transition={150} />
-          <LinearGradient colors={[tint, 'transparent']} style={styles.heroTopFade} pointerEvents="none" />
-          <LinearGradient colors={['transparent', 'rgba(11,11,15,0.55)', colors.background]} style={StyleSheet.absoluteFill} />
+          <LinearGradient
+            colors={[tint, withAlpha(tint, 0.85), withAlpha(tint, 0.4), 'transparent']}
+            locations={[0, 0.35, 0.7, 1]}
+            style={styles.heroTopFade}
+            pointerEvents="none"
+          />
+          <LinearGradient
+            colors={['transparent', withAlpha(colors.background, 0.4), withAlpha(colors.background, 0.85), colors.background]}
+            locations={[0, 0.55, 0.82, 1]}
+            style={StyleSheet.absoluteFill}
+          />
         </View>
         <TouchableOpacity style={[styles.back, { top: insets.top + spacing.sm }]} onPress={() => navigation.goBack()} hitSlop={10}>
           <Ionicons name="chevron-back" size={26} color={colors.text} />
@@ -136,7 +145,7 @@ const styles = StyleSheet.create({
   backLink: { color: colors.textMuted, marginTop: spacing.md },
   hero: { height: 320, backgroundColor: colors.background },
   heroImage: { flex: 1 },
-  heroTopFade: { position: 'absolute', top: 0, left: 0, right: 0, height: 96 },
+  heroTopFade: { position: 'absolute', top: 0, left: 0, right: 0, height: 170 },
   back: { position: 'absolute', left: spacing.lg, width: 38, height: 38, borderRadius: radius.pill, backgroundColor: colors.overlay, alignItems: 'center', justifyContent: 'center' },
   body: { paddingHorizontal: spacing.lg, marginTop: -30 },
   title: { color: colors.text, fontSize: 26, fontWeight: '900' },

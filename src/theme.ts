@@ -14,6 +14,16 @@ export const colors = {
   overlay: 'rgba(11,11,15,0.7)',
 };
 
+// #rrggbb + alpha (0..1) -> rgba() string, for smooth multi-stop gradients.
+export function withAlpha(hex: string, a: number): string {
+  const h = hex.replace('#', '');
+  const n = h.length === 3 ? h.split('').map((c) => c + c).join('') : h;
+  const r = parseInt(n.slice(0, 2), 16) || 0;
+  const g = parseInt(n.slice(2, 4), 16) || 0;
+  const b = parseInt(n.slice(4, 6), 16) || 0;
+  return `rgba(${r}, ${g}, ${b}, ${a})`;
+}
+
 export const spacing = {
   xs: 4,
   sm: 8,

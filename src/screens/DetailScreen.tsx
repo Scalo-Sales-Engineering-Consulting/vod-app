@@ -12,7 +12,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import type { RouteProp } from '@react-navigation/native';
-import { colors, radius, spacing } from '../theme';
+import { colors, radius, spacing, withAlpha } from '../theme';
 import { useCatalog } from '../context/CatalogContext';
 import { useFavorites } from '../context/FavoritesContext';
 import MovieCard from '../components/MovieCard';
@@ -54,12 +54,14 @@ export default function DetailScreen({ navigation, route }: { navigation: Nav; r
         <View style={styles.heroImage}>
           <Image source={movie.backdrop} style={StyleSheet.absoluteFill} contentFit="cover" contentPosition="top" />
           <LinearGradient
-            colors={[tint, 'transparent']}
+            colors={[tint, withAlpha(tint, 0.85), withAlpha(tint, 0.4), 'transparent']}
+            locations={[0, 0.35, 0.7, 1]}
             style={styles.heroTopFade}
             pointerEvents="none"
           />
           <LinearGradient
-            colors={['transparent', 'rgba(11,11,15,0.5)', colors.background]}
+            colors={['transparent', withAlpha(colors.background, 0.35), withAlpha(colors.background, 0.85), colors.background]}
+            locations={[0, 0.55, 0.82, 1]}
             style={StyleSheet.absoluteFill}
           />
         </View>
@@ -153,7 +155,7 @@ const styles = StyleSheet.create({
   center: { alignItems: 'center', justifyContent: 'center' },
   hero: { height: 380, backgroundColor: colors.background },
   heroImage: { flex: 1 },
-  heroTopFade: { position: 'absolute', top: 0, left: 0, right: 0, height: 96 },
+  heroTopFade: { position: 'absolute', top: 0, left: 0, right: 0, height: 170 },
   back: {
     position: 'absolute',
     left: spacing.lg,
