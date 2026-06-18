@@ -1,4 +1,5 @@
 import React from 'react';
+import { ActivityIndicator, View } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
 import * as Linking from 'expo-linking';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
@@ -9,7 +10,7 @@ import { CatalogProvider } from './src/context/CatalogContext';
 import { ProfileProvider } from './src/context/ProfileContext';
 import { AuthProvider, useAuth } from './src/context/AuthContext';
 import RootNavigator from './src/navigation/RootNavigator';
-import LoginScreen from './src/screens/LoginScreen';
+import AuthFlow from './src/screens/auth/AuthFlow';
 import type { RootStackParamList } from './src/navigation/types';
 
 const navTheme = {
@@ -41,12 +42,20 @@ const linking: LinkingOptions<RootStackParamList> = {
 // Gate the app behind sign-in: show LoginScreen until authenticated, then
 // mount the data providers (which fetch with the chosen token).
 function Gate() {
-  const { authed } = useAuth();
+  const { authed, restoring } = useAuth();
+  if (restoring) {
+    return (
+      <View style={{ flex: 1, backgroundColor: colors.background, alignItems: 'center', justifyContent: 'center' }}>
+        <StatusBar style="light" />
+        <ActivityIndicator size="large" color={colors.primary} />
+      </View>
+    );
+  }
   if (!authed) {
     return (
       <>
         <StatusBar style="light" />
-        <LoginScreen />
+        <AuthFlow />
       </>
     );
   }

@@ -1,6 +1,7 @@
 // Thin client for the FastAPI VOD streaming backend. See Test/API_CONTRACT.md.
 // Maps the backend VideoWithStream model onto the app's local `Movie` shape so the
 // existing screens/components keep working unchanged.
+import * as SecureStore from 'expo-secure-store';
 import { BASE_URL, DEMO_EMAIL, DEMO_PASSWORD, abs } from './config';
 import type { Movie } from '../data/movies';
 
@@ -30,9 +31,52 @@ export type GenreCount = { id: string; name: string; count: number };
 let token: string | null = null;
 let refreshToken: string | null = null;
 
+// "Remember me": when on, the refresh token is persisted to the device keychain
+// so a session survives an app restart. Restored at boot via restoreSession().
+const RT_KEY = 'vod.refresh_token';
+let remember = false;
+
+export function setRemember(on: boolean): void {
+  remember = on;
+}
+
+async function persistRefresh(): Promise<void> {
+  try {
+    if (remember && refreshToken) await SecureStore.setItemAsync(RT_KEY, refreshToken);
+    else await SecureStore.deleteItemAsync(RT_KEY);
+  } catch {}
+}
+
 function setTokens(json: { access_token: string; refresh_token?: string }): void {
   token = json.access_token;
   refreshToken = json.refresh_token ?? null;
+  void persistRefresh();
+}
+
+// Boot-time: if a refresh token was remembered, exchange it for a fresh access
+// token. Returns true when a session was restored (so the app can skip login).
+export async function restoreSession(): Promise<boolean> {
+  try {
+    const stored = await SecureStore.getItemAsync(RT_KEY);
+    if (!stored) return false;
+    const r = await fetch(`${BASE_URL}/auth/refresh`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ refresh_token: stored }),
+    });
+    if (!r.ok) {
+      await SecureStore.deleteItemAsync(RT_KEY);
+      return false;
+    }
+    const j = (await r.json()) as { access_token: string; refresh_token?: string };
+    token = j.access_token;
+    refreshToken = j.refresh_token ?? stored;
+    remember = true;
+    void persistRefresh();
+    return true;
+  } catch {
+    return false;
+  }
 }
 
 // Ensure we have an access token for an authed call (set by sign-in below).
@@ -65,6 +109,131 @@ export async function registerAccount(email: string, password: string): Promise<
   await loginWithPassword(email, password);
 }
 
+// ---- full registration wizard ----
+
+export type RegisterPayload = {
+  email: string;
+  password: string;
+  username?: string;
+  full_name?: string;
+  birthdate?: string; // YYYY-MM-DD
+  country?: string;
+  marketing_opt_in?: boolean;
+  is_kids?: boolean;
+};
+
+// Availability checks (live, as the user types). Fail-open on network error so
+// the form isn't blocked — the backend re-validates uniqueness on register.
+export async function checkEmailAvailable(email: string): Promise<boolean> {
+  try {
+    const r = await fetch(`${BASE_URL}/auth/check-email?email=${encodeURIComponent(email)}`);
+    if (!r.ok) return true;
+    return (await r.json()).available;
+  } catch {
+    return true;
+  }
+}
+
+export async function checkUsernameAvailable(username: string): Promise<boolean> {
+  try {
+    const r = await fetch(`${BASE_URL}/auth/check-username?username=${encodeURIComponent(username)}`);
+    if (!r.ok) return true;
+    return (await r.json()).available;
+  } catch {
+    return true;
+  }
+}
+
+// Create the account from the full wizard payload, then sign in.
+export async function registerFull(p: RegisterPayload): Promise<void> {
+  const res = await fetch(`${BASE_URL}/auth/register`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(p),
+  });
+  if (!res.ok) {
+    const e = await res.json().catch(() => ({}));
+    throw new Error(e.detail || 'Registration failed');
+  }
+  await loginWithPassword(p.email, p.password);
+}
+
+// ---- subscription plans + checkout ----
+
+export type Plan = {
+  id: string;
+  name: string;
+  price: number;
+  currency: string;
+  period: string;
+  resolution: string;
+  quality_label: string;
+  audio: string;
+  max_screens: number;
+  download_devices: number;
+  hdr: boolean;
+  spatial_audio: boolean;
+  devices: string[];
+  tagline: string;
+};
+
+export async function fetchPlans(): Promise<Plan[]> {
+  const r = await fetch(`${BASE_URL}/plans`);
+  if (!r.ok) throw new Error('Could not load plans');
+  return r.json();
+}
+
+export type PaymentMethod = 'card' | 'paypal' | 'gift';
+export type CheckoutPayload = {
+  plan: string;
+  payment_method: PaymentMethod;
+  card_number?: string;
+  card_exp?: string;
+  card_cvc?: string;
+  gift_code?: string;
+};
+
+// Stub checkout — returns the success message, throws with the decline reason on
+// 402 so the wizard can route to its happy / error result page.
+export async function subscribe(p: CheckoutPayload): Promise<string> {
+  const t = await login();
+  const res = await fetch(`${BASE_URL}/me/subscription`, {
+    method: 'POST',
+    headers: { Authorization: `Bearer ${t}`, 'Content-Type': 'application/json' },
+    body: JSON.stringify(p),
+  });
+  const body = await res.json().catch(() => ({}));
+  if (!res.ok) throw new Error(body.detail || 'Payment failed');
+  return body.message || 'Payment approved.';
+}
+
+// ---- forgot / reset password ----
+
+// Returns the reset token (no mail server in the self-hosted setup), or null
+// when the email didn't match (response is intentionally vague server-side).
+export async function forgotPassword(email: string): Promise<string | null> {
+  const r = await fetch(`${BASE_URL}/auth/forgot-password`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ email }),
+  });
+  if (!r.ok) throw new Error('Request failed');
+  return (await r.json()).reset_token ?? null;
+}
+
+export async function resetPassword(resetToken: string, newPassword: string): Promise<void> {
+  const r = await fetch(`${BASE_URL}/auth/reset-password`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ reset_token: resetToken, new_password: newPassword }),
+  });
+  if (!r.ok) {
+    const e = await r.json().catch(() => ({}));
+    throw new Error(e.detail || 'Reset failed');
+  }
+  setTokens(await r.json());
+}
+
 export async function loginAsGuest(): Promise<void> {
   const res = await fetch(`${BASE_URL}/auth/guest`, { method: 'POST' });
   if (!res.ok) throw new Error('Guest sign-in failed');
@@ -79,6 +248,8 @@ export function logout(): void {
   token = null;
   refreshToken = null;
   activeProfileId = null;
+  remember = false;
+  SecureStore.deleteItemAsync(RT_KEY).catch(() => {});
 }
 
 export function isAuthed(): boolean {
@@ -99,6 +270,7 @@ async function reauth(): Promise<string> {
         const j = (await r.json()) as { access_token: string; refresh_token?: string };
         token = j.access_token;
         refreshToken = j.refresh_token ?? refreshToken;
+        void persistRefresh();
         return token;
       }
     } catch {}

@@ -40,7 +40,8 @@
         {
           "photosPermission": "StreamX needs photo access to set a film poster."
         }
-      ]
+      ],
+      "expo-secure-store"
     ]
   }
 }
