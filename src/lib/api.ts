@@ -163,6 +163,13 @@ export async function fetchTop10(): Promise<Movie[]> {
   return items.map(mapVideo);
 }
 
+export async function fetchCategories(): Promise<Row[]> {
+  const rows = await authed<{ id: string; name: string; items: VideoWithStream[] }[]>(
+    '/catalog/categories',
+  );
+  return rows.map((r) => ({ title: r.name, movies: r.items.map(mapVideo) }));
+}
+
 // Returns null when the user has no watch history yet.
 export async function fetchBecauseYouWatched(): Promise<Row | null> {
   const r = await authed<{ genre: string; items: VideoWithStream[] }>('/catalog/because-you-watched');

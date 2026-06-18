@@ -10,6 +10,7 @@ import {
   fetchTop10,
   fetchBecauseYouWatched,
   fetchSeries,
+  fetchCategories,
   type Row,
   type ContinueItem,
   type SeriesSummary,
@@ -27,6 +28,7 @@ type CatalogValue = {
   continueWatching: ContinueItem[];
   top10: Movie[];
   becauseYouWatched: Row | null;
+  categories: Row[];
   series: SeriesSummary[];
   getMovie: (id: string) => Movie | undefined;
   source: Source;
@@ -55,6 +57,7 @@ export function CatalogProvider({ children }: { children: React.ReactNode }) {
   const [top10, setTop10] = useState<Movie[]>([]);
   const [becauseYouWatched, setBecauseYouWatched] = useState<Row | null>(null);
   const [series, setSeries] = useState<SeriesSummary[]>([]);
+  const [categories, setCategories] = useState<Row[]>([]);
   const [nonce, setNonce] = useState(0);
 
   // Core fetch. `silent` keeps the current UI on screen while refetching in the
@@ -66,6 +69,7 @@ export function CatalogProvider({ children }: { children: React.ReactNode }) {
     fetchTop10().then(setTop10).catch(() => {});
     fetchBecauseYouWatched().then(setBecauseYouWatched).catch(() => {});
     fetchSeries().then(setSeries).catch(() => {});
+    fetchCategories().then(setCategories).catch(() => {});
     try {
       const [r, g, c] = await Promise.all([fetchRows(), fetchGenres(), fetchCatalog()]);
       setRows(r);
@@ -114,6 +118,7 @@ export function CatalogProvider({ children }: { children: React.ReactNode }) {
       continueWatching,
       top10,
       becauseYouWatched,
+      categories,
       series,
       getMovie: (id: string) => byId.get(id),
       source,
@@ -121,7 +126,7 @@ export function CatalogProvider({ children }: { children: React.ReactNode }) {
       reload: () => setNonce((n) => n + 1),
       refresh: () => fetchAll(true),
     }),
-    [movies, rows, genres, continueWatching, top10, becauseYouWatched, series, byId, source, error, fetchAll],
+    [movies, rows, genres, continueWatching, top10, becauseYouWatched, categories, series, byId, source, error, fetchAll],
   );
 
   return <CatalogContext.Provider value={value}>{children}</CatalogContext.Provider>;

@@ -24,7 +24,6 @@ const linking: LinkingOptions<RootStackParamList> = {
           Home: 'home',
           Catalog: 'catalog',
           Favorites: 'favorites',
-          Manage: 'manage',
           Settings: 'settings',
         },
       },

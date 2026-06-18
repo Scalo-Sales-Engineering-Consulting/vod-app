@@ -14,6 +14,5 @@ export type TabsParamList = {
   Home: undefined;
   Catalog: undefined;
   Favorites: undefined;
-  Manage: undefined;
   Settings: undefined;
 };

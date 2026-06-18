@@ -7,7 +7,6 @@ import HomeScreen from '../screens/HomeScreen';
 import CatalogScreen from '../screens/CatalogScreen';
 import FavoritesScreen from '../screens/FavoritesScreen';
 import SettingsScreen from '../screens/SettingsScreen';
-import ManageScreen from '../screens/ManageScreen';
 import DetailScreen from '../screens/DetailScreen';
 import PlayerScreen from '../screens/PlayerScreen';
 import VideoFormScreen from '../screens/VideoFormScreen';
@@ -21,7 +20,6 @@ const ICONS: Record<keyof TabsParamList, keyof typeof Ionicons.glyphMap> = {
   Home: 'home',
   Catalog: 'grid',
   Favorites: 'heart',
-  Manage: 'film',
   Settings: 'person',
 };
 
@@ -48,7 +46,6 @@ function Tabs() {
       <Tab.Screen name="Home" component={HomeScreen} />
       <Tab.Screen name="Catalog" component={CatalogScreen} />
       <Tab.Screen name="Favorites" component={FavoritesScreen} options={{ title: 'Favorites' }} />
-      <Tab.Screen name="Manage" component={ManageScreen} />
       <Tab.Screen name="Settings" component={SettingsScreen} />
     </Tab.Navigator>
   );
