@@ -55,13 +55,13 @@ export default function DetailScreen({ navigation, route }: { navigation: Nav; r
         <View style={styles.heroImage}>
           <Image source={movie.backdrop} style={StyleSheet.absoluteFill} contentFit="cover" contentPosition={{ top: focusPos }} />
           <LinearGradient
-            colors={[colors.background, withAlpha(colors.background, 0.5), 'transparent']}
+            colors={[withAlpha(colors.background, 0.5), withAlpha(colors.background, 0.25), 'transparent']}
             locations={[0, 0.5, 1]}
             style={styles.heroTopFade}
             pointerEvents="none"
           />
           <LinearGradient
-            colors={['transparent', withAlpha(colors.background, 0.3), withAlpha(colors.background, 0.85), colors.background]}
+            colors={['transparent', withAlpha(colors.background, 0.15), withAlpha(colors.background, 0.45), colors.background]}
             locations={[0, 0.62, 0.86, 1]}
             style={StyleSheet.absoluteFill}
           />
