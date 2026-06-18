@@ -158,6 +158,43 @@ export async function registerFull(p: RegisterPayload): Promise<void> {
   await loginWithPassword(p.email, p.password);
 }
 
+// ---- account (signed-in user) ----
+
+export type Account = {
+  id: string;
+  email: string;
+  is_guest: boolean;
+  username: string | null;
+  full_name: string;
+  birthdate: string | null;
+  country: string;
+  marketing_opt_in: boolean;
+  plan: string;
+  payment_method: string;
+  subscription_active: boolean;
+};
+
+export async function fetchMe(): Promise<Account> {
+  return authed<Account>('/auth/me');
+}
+
+export type AccountPatch = {
+  full_name?: string;
+  username?: string;
+  email?: string;
+  birthdate?: string;
+  country?: string;
+  marketing_opt_in?: boolean;
+};
+
+export async function updateAccount(patch: AccountPatch): Promise<Account> {
+  return authedSend<Account>('/auth/me', 'PATCH', JSON.stringify(patch), true);
+}
+
+export async function cancelSubscription(): Promise<void> {
+  await authedSend<void>('/me/subscription', 'DELETE', '', false);
+}
+
 // ---- subscription plans + checkout ----
 
 export type Plan = {
