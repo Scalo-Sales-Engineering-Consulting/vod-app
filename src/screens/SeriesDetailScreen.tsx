@@ -77,8 +77,8 @@ export default function SeriesDetailScreen({ navigation, route }: { navigation: 
             pointerEvents="none"
           />
           <LinearGradient
-            colors={['transparent', withAlpha(colors.background, 0.4), withAlpha(colors.background, 0.85), colors.background]}
-            locations={[0, 0.55, 0.82, 1]}
+            colors={['transparent', withAlpha(colors.background, 0.3), withAlpha(colors.background, 0.85), colors.background]}
+            locations={[0, 0.62, 0.86, 1]}
             style={StyleSheet.absoluteFill}
           />
         </View>
@@ -144,9 +144,9 @@ const styles = StyleSheet.create({
   retry: { marginTop: spacing.sm, backgroundColor: colors.surfaceAlt, paddingVertical: spacing.sm, paddingHorizontal: spacing.xl, borderRadius: radius.pill },
   retryText: { color: colors.text, fontWeight: '700' },
   backLink: { color: colors.textMuted, marginTop: spacing.md },
-  hero: { height: 320, backgroundColor: colors.background },
+  hero: { height: 430, backgroundColor: colors.background },
   heroImage: { flex: 1 },
-  heroTopFade: { position: 'absolute', top: 0, left: 0, right: 0, height: 170 },
+  heroTopFade: { position: 'absolute', top: 0, left: 0, right: 0, height: 90 },
   back: { position: 'absolute', left: spacing.lg, width: 38, height: 38, borderRadius: radius.pill, backgroundColor: colors.overlay, alignItems: 'center', justifyContent: 'center' },
   body: { paddingHorizontal: spacing.lg, marginTop: -30 },
   title: { color: colors.text, fontSize: 26, fontWeight: '900' },

@@ -63,8 +63,8 @@ export default function DetailScreen({ navigation, route }: { navigation: Nav; r
             pointerEvents="none"
           />
           <LinearGradient
-            colors={['transparent', withAlpha(colors.background, 0.35), withAlpha(colors.background, 0.85), colors.background]}
-            locations={[0, 0.55, 0.82, 1]}
+            colors={['transparent', withAlpha(colors.background, 0.3), withAlpha(colors.background, 0.85), colors.background]}
+            locations={[0, 0.62, 0.86, 1]}
             style={StyleSheet.absoluteFill}
           />
         </View>
@@ -156,9 +156,9 @@ export default function DetailScreen({ navigation, route }: { navigation: Nav; r
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.background },
   center: { alignItems: 'center', justifyContent: 'center' },
-  hero: { height: 380, backgroundColor: colors.background },
+  hero: { height: 470, backgroundColor: colors.background },
   heroImage: { flex: 1 },
-  heroTopFade: { position: 'absolute', top: 0, left: 0, right: 0, height: 170 },
+  heroTopFade: { position: 'absolute', top: 0, left: 0, right: 0, height: 90 },
   back: {
     position: 'absolute',
     left: spacing.lg,
