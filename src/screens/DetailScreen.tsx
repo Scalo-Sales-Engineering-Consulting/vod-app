@@ -35,7 +35,6 @@ export default function DetailScreen({ navigation, route }: { navigation: Nav; r
     );
   }
 
-  const tint = movie.posterColor || colors.background;
   // Face-aware vertical crop: position the cover image on the poster's focal Y
   // so faces aren't cut off the top or bottom.
   const focusPos = `${Math.round((movie.posterFocusY ?? 0.3) * 100)}%`;
@@ -50,15 +49,14 @@ export default function DetailScreen({ navigation, route }: { navigation: Nav; r
       contentContainerStyle={{ paddingBottom: spacing.xxl }}
       showsVerticalScrollIndicator={false}
     >
-      <View style={[styles.hero, { paddingTop: insets.top, backgroundColor: tint }]}>
-        {/* The strip above the poster (safe-area / Dynamic Island) is filled with
-            the poster's own top colour, and a matching gradient fades over the
-            image top — so the poster and the area above it read as one piece. */}
+      <View style={[styles.hero, { paddingTop: insets.top }]}>
+        {/* Dark background above the poster + a light gradient fading the image
+            top into it (status-bar / Dynamic Island area). */}
         <View style={styles.heroImage}>
           <Image source={movie.backdrop} style={StyleSheet.absoluteFill} contentFit="cover" contentPosition={{ top: focusPos }} />
           <LinearGradient
-            colors={[tint, withAlpha(tint, 0.85), withAlpha(tint, 0.4), 'transparent']}
-            locations={[0, 0.35, 0.7, 1]}
+            colors={[colors.background, withAlpha(colors.background, 0.5), 'transparent']}
+            locations={[0, 0.5, 1]}
             style={styles.heroTopFade}
             pointerEvents="none"
           />
