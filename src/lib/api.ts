@@ -28,22 +28,61 @@ type CatalogRow = { genre: string; items: VideoWithStream[] };
 export type GenreCount = { id: string; name: string; count: number };
 
 let token: string | null = null;
-
 let refreshToken: string | null = null;
 
+function setTokens(json: { access_token: string; refresh_token?: string }): void {
+  token = json.access_token;
+  refreshToken = json.refresh_token ?? null;
+}
+
+// Ensure we have an access token for an authed call (set by sign-in below).
 async function login(): Promise<string> {
   if (token) return token;
-  const body = new URLSearchParams({ username: DEMO_EMAIL, password: DEMO_PASSWORD });
+  throw new Error('Not authenticated');
+}
+
+export async function loginWithPassword(email: string, password: string): Promise<void> {
+  const body = new URLSearchParams({ username: email, password });
   const res = await fetch(`${BASE_URL}/auth/login`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
     body: body.toString(),
   });
-  if (!res.ok) throw new Error(`login failed: ${res.status}`);
-  const json = (await res.json()) as { access_token: string; refresh_token?: string };
-  token = json.access_token;
-  refreshToken = json.refresh_token ?? null;
-  return token;
+  if (!res.ok) throw new Error('Invalid email or password');
+  setTokens(await res.json());
+}
+
+export async function registerAccount(email: string, password: string): Promise<void> {
+  const res = await fetch(`${BASE_URL}/auth/register`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ email, password }),
+  });
+  if (!res.ok) {
+    const e = await res.json().catch(() => ({}));
+    throw new Error(e.detail || 'Registration failed');
+  }
+  await loginWithPassword(email, password);
+}
+
+export async function loginAsGuest(): Promise<void> {
+  const res = await fetch(`${BASE_URL}/auth/guest`, { method: 'POST' });
+  if (!res.ok) throw new Error('Guest sign-in failed');
+  setTokens(await res.json());
+}
+
+export async function loginDemo(): Promise<void> {
+  await loginWithPassword(DEMO_EMAIL, DEMO_PASSWORD);
+}
+
+export function logout(): void {
+  token = null;
+  refreshToken = null;
+  activeProfileId = null;
+}
+
+export function isAuthed(): boolean {
+  return !!token;
 }
 
 // On a 401 (access token expired), rotate via the refresh token; fall back to

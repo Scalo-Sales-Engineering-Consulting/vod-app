@@ -13,6 +13,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { colors, radius, spacing } from '../theme';
 import { useProfile } from '../context/ProfileContext';
+import { useAuth } from '../context/AuthContext';
 
 type RowProps = {
   icon: keyof typeof Ionicons.glyphMap;
@@ -55,6 +56,7 @@ export default function SettingsScreen() {
   const [autoplay, setAutoplay] = useState(true);
   const [notifications, setNotifications] = useState(false);
   const { profiles, activeId, setActive, createProfile, removeProfile } = useProfile();
+  const { signOut } = useAuth();
 
   const onAddProfile = () => {
     Alert.prompt?.('New profile', 'Profile name', (name) => {
@@ -159,7 +161,7 @@ export default function SettingsScreen() {
         <SettingRow icon="shield-checkmark" label="Privacy & security" />
       </View>
 
-      <TouchableOpacity style={styles.signOut} activeOpacity={0.85}>
+      <TouchableOpacity style={styles.signOut} activeOpacity={0.85} onPress={signOut}>
         <Ionicons name="log-out-outline" size={18} color={colors.primary} />
         <Text style={styles.signOutText}>Sign out</Text>
       </TouchableOpacity>
