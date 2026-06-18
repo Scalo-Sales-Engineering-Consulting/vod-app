@@ -63,9 +63,13 @@ export default function SeriesDetailScreen({ navigation, route }: { navigation: 
 
   return (
     <ScrollView style={styles.container} contentContainerStyle={{ paddingBottom: spacing.xxl }} showsVerticalScrollIndicator={false}>
-      <View style={styles.hero}>
-        <Image source={data.poster} style={StyleSheet.absoluteFill} contentFit="cover" transition={150} />
-        <LinearGradient colors={['rgba(11,11,15,0.25)', 'rgba(11,11,15,0.55)', colors.background]} style={StyleSheet.absoluteFill} />
+      <View style={[styles.hero, { paddingTop: insets.top }]}>
+        {/* Below the safe area + top-anchored so the Dynamic Island doesn't cover
+            the poster and faces aren't cropped out the top. */}
+        <View style={styles.heroImage}>
+          <Image source={data.poster} style={StyleSheet.absoluteFill} contentFit="cover" contentPosition="top" transition={150} />
+          <LinearGradient colors={['rgba(11,11,15,0.15)', 'rgba(11,11,15,0.55)', colors.background]} style={StyleSheet.absoluteFill} />
+        </View>
         <TouchableOpacity style={[styles.back, { top: insets.top + spacing.sm }]} onPress={() => navigation.goBack()} hitSlop={10}>
           <Ionicons name="chevron-back" size={26} color={colors.text} />
         </TouchableOpacity>
@@ -128,7 +132,8 @@ const styles = StyleSheet.create({
   retry: { marginTop: spacing.sm, backgroundColor: colors.surfaceAlt, paddingVertical: spacing.sm, paddingHorizontal: spacing.xl, borderRadius: radius.pill },
   retryText: { color: colors.text, fontWeight: '700' },
   backLink: { color: colors.textMuted, marginTop: spacing.md },
-  hero: { height: 300 },
+  hero: { height: 320, backgroundColor: colors.background },
+  heroImage: { flex: 1 },
   back: { position: 'absolute', left: spacing.lg, width: 38, height: 38, borderRadius: radius.pill, backgroundColor: colors.overlay, alignItems: 'center', justifyContent: 'center' },
   body: { paddingHorizontal: spacing.lg, marginTop: -30 },
   title: { color: colors.text, fontSize: 26, fontWeight: '900' },

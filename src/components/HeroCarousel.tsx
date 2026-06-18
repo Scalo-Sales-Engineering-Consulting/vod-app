@@ -86,7 +86,7 @@ export default function HeroCarousel({
         renderItem={({ item }) => (
           <TouchableOpacity activeOpacity={0.9} style={{ width: CARD_W, marginRight: spacing.md }} onPress={() => onPress(item.id)}>
             <View style={[styles.card, { height: CARD_H }]}>
-              <Image source={item.image} style={StyleSheet.absoluteFill} contentFit="cover" />
+              <Image source={item.image} style={StyleSheet.absoluteFill} contentFit="cover" contentPosition="top" />
               <LinearGradient
                 colors={['transparent', 'rgba(11,11,15,0.1)', 'rgba(11,11,15,0.92)']}
                 locations={[0, 0.45, 1]}

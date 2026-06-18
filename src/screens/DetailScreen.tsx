@@ -46,12 +46,17 @@ export default function DetailScreen({ navigation, route }: { navigation: Nav; r
       contentContainerStyle={{ paddingBottom: spacing.xxl }}
       showsVerticalScrollIndicator={false}
     >
-      <View style={styles.hero}>
-        <Image source={movie.backdrop} style={StyleSheet.absoluteFill} contentFit="cover" />
-        <LinearGradient
-          colors={['rgba(11,11,15,0.3)', 'rgba(11,11,15,0.5)', colors.background]}
-          style={StyleSheet.absoluteFill}
-        />
+      <View style={[styles.hero, { paddingTop: insets.top }]}>
+        {/* Image starts below the safe area so the Dynamic Island / notch never
+            covers the poster, and contentPosition="top" keeps faces in frame
+            instead of center-cropping heads off. */}
+        <View style={styles.heroImage}>
+          <Image source={movie.backdrop} style={StyleSheet.absoluteFill} contentFit="cover" contentPosition="top" />
+          <LinearGradient
+            colors={['rgba(11,11,15,0.15)', 'rgba(11,11,15,0.5)', colors.background]}
+            style={StyleSheet.absoluteFill}
+          />
+        </View>
         <TouchableOpacity
           style={[styles.back, { top: insets.top + spacing.sm }]}
           onPress={() => navigation.goBack()}
@@ -140,7 +145,8 @@ export default function DetailScreen({ navigation, route }: { navigation: Nav; r
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.background },
   center: { alignItems: 'center', justifyContent: 'center' },
-  hero: { height: 360 },
+  hero: { height: 380, backgroundColor: colors.background },
+  heroImage: { flex: 1 },
   back: {
     position: 'absolute',
     left: spacing.lg,
