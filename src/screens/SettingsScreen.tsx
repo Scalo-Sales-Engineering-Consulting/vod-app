@@ -57,16 +57,16 @@ export default function SettingsScreen() {
   const { profiles, activeId, setActive, createProfile, removeProfile } = useProfile();
 
   const onAddProfile = () => {
-    Alert.prompt?.('Nowy profil', 'Nazwa profilu', (name) => {
-      if (name?.trim()) createProfile(name.trim()).catch((e) => Alert.alert('Błąd', String(e)));
+    Alert.prompt?.('New profile', 'Profile name', (name) => {
+      if (name?.trim()) createProfile(name.trim()).catch((e) => Alert.alert('Error', String(e)));
     });
   };
 
   const onLongPressProfile = (id: string, name: string) => {
     if (profiles.length <= 1) return;
-    Alert.alert('Usuń profil', `Usunąć „${name}"? Jego lista i historia znikną.`, [
-      { text: 'Anuluj', style: 'cancel' },
-      { text: 'Usuń', style: 'destructive', onPress: () => removeProfile(id).catch((e) => Alert.alert('Błąd', String(e))) },
+    Alert.alert('Delete profile', `Delete “${name}”? Its list and history will be gone.`, [
+      { text: 'Cancel', style: 'cancel' },
+      { text: 'Delete', style: 'destructive', onPress: () => removeProfile(id).catch((e) => Alert.alert('Error', String(e))) },
     ]);
   };
 
@@ -128,7 +128,7 @@ export default function SettingsScreen() {
           <View style={[styles.profileAvatar, styles.addAvatar]}>
             <Ionicons name="add" size={28} color={colors.textMuted} />
           </View>
-          <Text style={styles.profileName}>Dodaj</Text>
+          <Text style={styles.profileName}>Add</Text>
         </TouchableOpacity>
       </ScrollView>
 

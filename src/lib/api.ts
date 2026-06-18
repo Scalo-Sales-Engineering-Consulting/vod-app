@@ -116,6 +116,15 @@ function fmtDuration(sec: number | null): string {
   return `${r}s`;
 }
 
+// Display-only PL→EN genre labels (catalog content is Polish).
+const GENRE_EN: Record<string, string> = {
+  Akcja: 'Action', Przygodowy: 'Adventure', Przygodowe: 'Adventure', Komedia: 'Comedy',
+  Dramat: 'Drama', Fantasy: 'Fantasy', Horror: 'Horror', Thriller: 'Thriller',
+  Animacja: 'Animation', Kryminał: 'Crime', Familijny: 'Family', Wojenny: 'War',
+  Romans: 'Romance', Dokument: 'Documentary', Muzyczny: 'Musical', Western: 'Western',
+};
+export const enGenre = (g: string): string => GENRE_EN[g] ?? g;
+
 export function mapVideo(v: VideoWithStream): Movie {
   // Cache-bust by updated_at: the poster URL is stable (/videos/<id>/poster), so
   // without this expo-image keeps showing the old cached image after a poster swap.
@@ -129,7 +138,7 @@ export function mapVideo(v: VideoWithStream): Movie {
     year: v.release_year ?? 0,
     rating: pseudoRating(v.id),
     duration: fmtDuration(v.duration_seconds),
-    genres: v.genres.map((g) => g.name),
+    genres: v.genres.map((g) => enGenre(g.name)),
     maturity: v.maturity_rating ?? 'All',
     description: v.description ?? '',
     poster,
@@ -145,12 +154,12 @@ export type Row = { title: string; movies: Movie[] };
 
 export async function fetchRows(): Promise<Row[]> {
   const rows = await authed<CatalogRow[]>('/catalog/rows');
-  return rows.map((r) => ({ title: r.genre, movies: r.items.map(mapVideo) }));
+  return rows.map((r) => ({ title: enGenre(r.genre), movies: r.items.map(mapVideo) }));
 }
 
 export async function fetchGenres(): Promise<string[]> {
   const gs = await authed<GenreCount[]>('/catalog/genres');
-  return ['All', ...gs.map((g) => g.name)];
+  return ['All', ...gs.map((g) => enGenre(g.name))];
 }
 
 export async function fetchCatalog(): Promise<Movie[]> {

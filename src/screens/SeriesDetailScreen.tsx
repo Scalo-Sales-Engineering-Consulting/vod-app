@@ -46,7 +46,7 @@ export default function SeriesDetailScreen({ navigation, route }: { navigation: 
   if (!data) {
     return (
       <View style={[styles.container, styles.center]}>
-        <Text style={{ color: colors.text }}>Nie znaleziono serialu.</Text>
+        <Text style={{ color: colors.text }}>Series not found.</Text>
       </View>
     );
   }
@@ -71,7 +71,7 @@ export default function SeriesDetailScreen({ navigation, route }: { navigation: 
         <View style={styles.metaRow}>
           {data.year > 0 && <Text style={styles.meta}>{data.year}</Text>}
           <View style={styles.maturity}><Text style={styles.maturityText}>{data.maturity}</Text></View>
-          <Text style={styles.meta}>{data.episodeCount} odc.</Text>
+          <Text style={styles.meta}>{data.episodeCount} episodes</Text>
         </View>
         {!!data.description && <Text style={styles.desc}>{data.description}</Text>}
 
@@ -81,7 +81,7 @@ export default function SeriesDetailScreen({ navigation, route }: { navigation: 
               const active = s.number === season;
               return (
                 <TouchableOpacity key={s.number} onPress={() => setSeason(s.number)} style={[styles.seasonChip, active && styles.seasonActive]}>
-                  <Text style={[styles.seasonText, active && styles.seasonTextActive]}>Sezon {s.number}</Text>
+                  <Text style={[styles.seasonText, active && styles.seasonTextActive]}>Season {s.number}</Text>
                 </TouchableOpacity>
               );
             })}

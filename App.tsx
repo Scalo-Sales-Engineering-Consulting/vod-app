@@ -22,7 +22,8 @@ const linking: LinkingOptions<RootStackParamList> = {
       Tabs: {
         screens: {
           Home: 'home',
-          Catalog: 'catalog',
+          Movies: 'movies',
+          Series: 'series',
           Favorites: 'favorites',
           Settings: 'settings',
         },

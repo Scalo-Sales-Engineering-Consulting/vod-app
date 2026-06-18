@@ -4,7 +4,8 @@ import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { Ionicons } from '@expo/vector-icons';
 import { colors } from '../theme';
 import HomeScreen from '../screens/HomeScreen';
-import CatalogScreen from '../screens/CatalogScreen';
+import MoviesScreen from '../screens/MoviesScreen';
+import SeriesScreen from '../screens/SeriesScreen';
 import FavoritesScreen from '../screens/FavoritesScreen';
 import SettingsScreen from '../screens/SettingsScreen';
 import DetailScreen from '../screens/DetailScreen';
@@ -18,7 +19,8 @@ const Stack = createNativeStackNavigator<RootStackParamList>();
 
 const ICONS: Record<keyof TabsParamList, keyof typeof Ionicons.glyphMap> = {
   Home: 'home',
-  Catalog: 'grid',
+  Movies: 'film',
+  Series: 'tv',
   Favorites: 'heart',
   Settings: 'person',
 };
@@ -44,7 +46,8 @@ function Tabs() {
       })}
     >
       <Tab.Screen name="Home" component={HomeScreen} />
-      <Tab.Screen name="Catalog" component={CatalogScreen} />
+      <Tab.Screen name="Movies" component={MoviesScreen} />
+      <Tab.Screen name="Series" component={SeriesScreen} />
       <Tab.Screen name="Favorites" component={FavoritesScreen} options={{ title: 'Favorites' }} />
       <Tab.Screen name="Settings" component={SettingsScreen} />
     </Tab.Navigator>
