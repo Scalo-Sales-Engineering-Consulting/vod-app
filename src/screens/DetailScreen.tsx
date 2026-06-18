@@ -154,7 +154,7 @@ export default function DetailScreen({ navigation, route }: { navigation: Nav; r
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.background },
   center: { alignItems: 'center', justifyContent: 'center' },
-  hero: { height: 470, backgroundColor: colors.background },
+  hero: { height: 620, backgroundColor: colors.background },
   heroImage: { flex: 1 },
   heroTopFade: { position: 'absolute', top: 0, left: 0, right: 0, height: 90 },
   back: {

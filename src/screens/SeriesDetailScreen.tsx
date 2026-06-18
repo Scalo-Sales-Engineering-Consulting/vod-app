@@ -142,7 +142,7 @@ const styles = StyleSheet.create({
   retry: { marginTop: spacing.sm, backgroundColor: colors.surfaceAlt, paddingVertical: spacing.sm, paddingHorizontal: spacing.xl, borderRadius: radius.pill },
   retryText: { color: colors.text, fontWeight: '700' },
   backLink: { color: colors.textMuted, marginTop: spacing.md },
-  hero: { height: 430, backgroundColor: colors.background },
+  hero: { height: 590, backgroundColor: colors.background },
   heroImage: { flex: 1 },
   heroTopFade: { position: 'absolute', top: 0, left: 0, right: 0, height: 90 },
   back: { position: 'absolute', left: spacing.lg, width: 38, height: 38, borderRadius: radius.pill, backgroundColor: colors.overlay, alignItems: 'center', justifyContent: 'center' },
