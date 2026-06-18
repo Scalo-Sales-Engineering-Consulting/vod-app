@@ -46,15 +46,17 @@ export default function HomeScreen({ navigation }: { navigation: Nav }) {
   const [searchOpen, setSearchOpen] = useState(false);
   const [query, setQuery] = useState('');
   const [heroIndex, setHeroIndex] = useState(0);
-  const heroRef = useRef<ScrollView>(null);
+  const heroRef = useRef<FlatList<Movie>>(null);
+
+  // Hero card geometry (Disney+-style card with peeking neighbours).
+  const CARD_W = Math.round(width - 56);
+  const CARD_H = Math.round(CARD_W * 1.32);
+  const SNAP = CARD_W + GAP;
+  const SIDE = Math.round((width - CARD_W) / 2);
 
   const openDetail = (movieId: string) => navigation.navigate('Detail', { movieId });
 
-  // Hero = up to 10 recommended (Top 10, fallback to catalog).
-  const heroItems = useMemo<Movie[]>(
-    () => (top10.length ? top10 : movies).slice(0, 10),
-    [top10, movies],
-  );
+  const heroItems = useMemo<Movie[]>(() => (top10.length ? top10 : movies).slice(0, 10), [top10, movies]);
 
   useFocusEffect(useCallback(() => { refresh(); }, [refresh]));
   const onRefresh = useCallback(async () => {
@@ -63,22 +65,20 @@ export default function HomeScreen({ navigation }: { navigation: Nav }) {
     setRefreshing(false);
   }, [refresh]);
 
-  // Auto-advance the hero carousel.
   useEffect(() => {
     if (tab !== 'movies' || heroItems.length < 2 || searchOpen) return;
     const id = setInterval(() => {
       setHeroIndex((i) => {
         const next = (i + 1) % heroItems.length;
-        heroRef.current?.scrollTo({ x: next * width, animated: true });
+        heroRef.current?.scrollToOffset({ offset: next * SNAP, animated: true });
         return next;
       });
     }, 5000);
     return () => clearInterval(id);
-  }, [tab, heroItems.length, searchOpen, width]);
+  }, [tab, heroItems.length, searchOpen, SNAP]);
 
-  const onHeroScroll = (e: NativeSyntheticEvent<NativeScrollEvent>) => {
-    setHeroIndex(Math.round(e.nativeEvent.contentOffset.x / width));
-  };
+  const onHeroScroll = (e: NativeSyntheticEvent<NativeScrollEvent>) =>
+    setHeroIndex(Math.round(e.nativeEvent.contentOffset.x / SNAP));
 
   const results = useMemo(() => {
     const q = query.trim().toLowerCase();
@@ -89,31 +89,19 @@ export default function HomeScreen({ navigation }: { navigation: Nav }) {
   }, [query, movies]);
   const closeSearch = () => { setSearchOpen(false); setQuery(''); };
 
-  if (source === 'loading') {
-    return (
-      <View style={[styles.container, styles.center]}>
-        <ActivityIndicator size="large" color={colors.primary} />
-      </View>
-    );
-  }
-
-  // ---- top bar: brand + search + Filmy/Seriale pills ----
-  const TopBar = (
-    <View style={[styles.topBar, { paddingTop: insets.top + spacing.sm }]}>
-      <View style={styles.brandRow}>
-        <Text style={styles.brand}>STREAM<Text style={{ color: colors.primary }}>X</Text></Text>
+  // Header: "Dla Ciebie" title + search + Filmy/Seriale pills.
+  const Header = (
+    <View style={[styles.header, { paddingTop: insets.top + spacing.sm }]}>
+      <View style={styles.headerRow}>
+        <Text style={styles.pageTitle}>Dla Ciebie</Text>
         <TouchableOpacity hitSlop={10} onPress={() => setSearchOpen(true)}>
-          <Ionicons name="search" size={22} color={colors.text} />
+          <Ionicons name="search" size={24} color={colors.text} />
         </TouchableOpacity>
       </View>
       <View style={styles.pills}>
         {(['movies', 'series'] as Tab[]).map((t) => (
-          <TouchableOpacity
-            key={t}
-            onPress={() => setTab(t)}
-            style={[styles.pill, tab === t && styles.pillActive]}
-            activeOpacity={0.85}
-          >
+          <TouchableOpacity key={t} onPress={() => setTab(t)} activeOpacity={0.85}
+            style={[styles.pill, tab === t && styles.pillActive]}>
             <Text style={[styles.pillText, tab === t && styles.pillTextActive]}>
               {t === 'movies' ? 'Filmy' : 'Seriale'}
             </Text>
@@ -123,145 +111,141 @@ export default function HomeScreen({ navigation }: { navigation: Nav }) {
     </View>
   );
 
-  const heroH = Math.min(540, width * 1.35);
+  if (source === 'loading') {
+    return <View style={[styles.container, styles.center]}><ActivityIndicator size="large" color={colors.primary} /></View>;
+  }
+
+  const HeroCard = ({ item }: { item: Movie }) => (
+    <TouchableOpacity activeOpacity={0.9} style={{ width: CARD_W, marginRight: GAP }} onPress={() => openDetail(item.id)}>
+      <View style={[styles.card, { height: CARD_H }]}>
+        <Image source={item.backdrop} style={StyleSheet.absoluteFill} contentFit="cover" />
+        <LinearGradient
+          colors={['transparent', 'rgba(11,11,15,0.1)', 'rgba(11,11,15,0.92)']}
+          locations={[0, 0.45, 1]}
+          style={StyleSheet.absoluteFill}
+        />
+        <View style={styles.cardInfo}>
+          <View style={styles.newBadge}><Text style={styles.newBadgeText}>Nowość</Text></View>
+          <Text style={styles.cardTitle} numberOfLines={2}>{item.title}</Text>
+          <Text style={styles.cardMeta}>
+            {item.maturity} · {item.year || '—'} · {item.genres[0] ?? 'Film'}
+          </Text>
+        </View>
+      </View>
+    </TouchableOpacity>
+  );
+
+  const MoviesBody = (
+    <ScrollView
+      style={styles.container}
+      contentContainerStyle={{ paddingBottom: spacing.xxl }}
+      showsVerticalScrollIndicator={false}
+      refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={colors.primary} />}
+    >
+      {Header}
+
+      {heroItems.length > 0 && (
+        <View>
+          <FlatList
+            ref={heroRef}
+            data={heroItems}
+            keyExtractor={(m) => m.id}
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            snapToInterval={SNAP}
+            decelerationRate="fast"
+            contentContainerStyle={{ paddingHorizontal: SIDE }}
+            onMomentumScrollEnd={onHeroScroll}
+            renderItem={HeroCard}
+          />
+          <View style={styles.dots}>
+            {heroItems.map((_, i) => <View key={i} style={[styles.dot, i === heroIndex && styles.dotActive]} />)}
+          </View>
+        </View>
+      )}
+
+      <View>
+        {continueWatching.length > 0 && (
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>Kontynuuj oglądanie</Text>
+            <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.hScroll}>
+              {continueWatching.map((c) => (
+                <TouchableOpacity key={c.movie.id} activeOpacity={0.85} style={styles.cwCard}
+                  onPress={() => navigation.navigate('Player', { movieId: c.movie.id, resume: c.positionSeconds })}>
+                  <Image source={c.movie.poster} style={styles.cwPoster} contentFit="cover" />
+                  <View style={styles.cwPlay}><Ionicons name="play-circle" size={34} color="rgba(255,255,255,0.92)" /></View>
+                  <View style={styles.cwBar}><View style={[styles.cwFill, { width: `${Math.round(c.percent * 100)}%` }]} /></View>
+                  <Text numberOfLines={1} style={styles.cwName}>{c.movie.title}</Text>
+                </TouchableOpacity>
+              ))}
+            </ScrollView>
+          </View>
+        )}
+
+        {categories.map((row) => (
+          <MovieRow key={'cat:' + row.title} title={row.title} movies={row.movies} onPressMovie={openDetail} />
+        ))}
+
+        {becauseYouWatched && (
+          <MovieRow title={becauseYouWatched.title} movies={becauseYouWatched.movies} onPressMovie={openDetail} />
+        )}
+
+        {top10.length > 0 && (
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>Top 10 w Polsce dzisiaj</Text>
+            <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.topScroll}>
+              {top10.map((m, i) => (
+                <TouchableOpacity key={m.id} activeOpacity={0.85} style={styles.topItem} onPress={() => openDetail(m.id)}>
+                  <Text style={styles.topRank}>{i + 1}</Text>
+                  <Image source={m.poster} style={styles.topPoster} contentFit="cover" />
+                </TouchableOpacity>
+              ))}
+            </ScrollView>
+          </View>
+        )}
+
+        {rows.map((row) => (
+          <MovieRow key={row.title} title={row.title} movies={row.movies} onPressMovie={openDetail} />
+        ))}
+      </View>
+    </ScrollView>
+  );
+
+  const SeriesBody = (
+    <FlatList
+      data={series}
+      key={GRID_COLS}
+      numColumns={GRID_COLS}
+      keyExtractor={(s) => s.id}
+      ListHeaderComponent={Header}
+      showsVerticalScrollIndicator={false}
+      refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={colors.primary} />}
+      contentContainerStyle={{ paddingBottom: spacing.xxl }}
+      columnWrapperStyle={{ gap: GAP, paddingHorizontal: PAD }}
+      ListEmptyComponent={<Text style={styles.empty}>Brak seriali.</Text>}
+      ItemSeparatorComponent={() => <View style={{ height: spacing.lg }} />}
+      renderItem={({ item }) => {
+        const w = (width - PAD * 2 - GAP * (GRID_COLS - 1)) / GRID_COLS;
+        return (
+          <TouchableOpacity activeOpacity={0.85} style={{ width: w }} onPress={() => navigation.navigate('SeriesDetail', { seriesId: item.id })}>
+            <Image source={item.poster} style={{ width: w, height: w * 1.5, borderRadius: radius.sm, backgroundColor: colors.surfaceAlt }} contentFit="cover" />
+            <Text numberOfLines={1} style={styles.gridName}>{item.title}</Text>
+          </TouchableOpacity>
+        );
+      }}
+    />
+  );
 
   return (
     <View style={styles.container}>
-      {tab === 'movies' ? (
-        <ScrollView
-          style={styles.container}
-          contentContainerStyle={{ paddingTop: 0, paddingBottom: spacing.xxl }}
-          showsVerticalScrollIndicator={false}
-          refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={colors.primary} />}
-        >
-          {/* HERO CAROUSEL */}
-          {heroItems.length > 0 && (
-            <View style={{ height: heroH }}>
-              <ScrollView
-                ref={heroRef}
-                horizontal
-                pagingEnabled
-                showsHorizontalScrollIndicator={false}
-                onMomentumScrollEnd={onHeroScroll}
-              >
-                {heroItems.map((m) => (
-                  <View key={m.id} style={{ width, height: heroH }}>
-                    <Image source={m.backdrop} style={StyleSheet.absoluteFill} contentFit="cover" />
-                    <LinearGradient
-                      colors={['rgba(11,11,15,0.15)', 'rgba(11,11,15,0.5)', colors.background]}
-                      style={StyleSheet.absoluteFill}
-                    />
-                    <View style={styles.heroContent}>
-                      <Text style={styles.heroTitle} numberOfLines={2}>{m.title}</Text>
-                      <View style={styles.heroTags}>
-                        {m.genres.slice(0, 3).map((g) => (
-                          <Text key={g} style={styles.heroTag}>{g}</Text>
-                        ))}
-                      </View>
-                      <View style={styles.heroBtns}>
-                        <TouchableOpacity style={styles.playBtn} activeOpacity={0.85}
-                          onPress={() => navigation.navigate('Player', { movieId: m.id })}>
-                          <Ionicons name="play" size={18} color="#000" />
-                          <Text style={styles.playText}>Odtwórz</Text>
-                        </TouchableOpacity>
-                        <TouchableOpacity style={styles.infoBtn} activeOpacity={0.85} onPress={() => openDetail(m.id)}>
-                          <Ionicons name="information-circle-outline" size={18} color={colors.text} />
-                          <Text style={styles.infoText}>Info</Text>
-                        </TouchableOpacity>
-                      </View>
-                    </View>
-                  </View>
-                ))}
-              </ScrollView>
-              {/* pagination dots */}
-              <View style={styles.dots}>
-                {heroItems.map((_, i) => (
-                  <View key={i} style={[styles.dot, i === heroIndex && styles.dotActive]} />
-                ))}
-              </View>
-            </View>
-          )}
-
-          <View style={styles.rows}>
-            {continueWatching.length > 0 && (
-              <View style={styles.section}>
-                <Text style={styles.sectionTitle}>Kontynuuj oglądanie</Text>
-                <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.hScroll}>
-                  {continueWatching.map((c) => (
-                    <TouchableOpacity key={c.movie.id} activeOpacity={0.85} style={styles.cwCard}
-                      onPress={() => navigation.navigate('Player', { movieId: c.movie.id, resume: c.positionSeconds })}>
-                      <Image source={c.movie.poster} style={styles.cwPoster} contentFit="cover" />
-                      <View style={styles.cwPlay}><Ionicons name="play-circle" size={34} color="rgba(255,255,255,0.92)" /></View>
-                      <View style={styles.cwBar}><View style={[styles.cwFill, { width: `${Math.round(c.percent * 100)}%` }]} /></View>
-                      <Text numberOfLines={1} style={styles.cwName}>{c.movie.title}</Text>
-                    </TouchableOpacity>
-                  ))}
-                </ScrollView>
-              </View>
-            )}
-
-            {/* Curated categories */}
-            {categories.map((row) => (
-              <MovieRow key={'cat:' + row.title} title={row.title} movies={row.movies} onPressMovie={openDetail} />
-            ))}
-
-            {becauseYouWatched && (
-              <MovieRow title={becauseYouWatched.title} movies={becauseYouWatched.movies} onPressMovie={openDetail} />
-            )}
-
-            {top10.length > 0 && (
-              <View style={styles.section}>
-                <Text style={styles.sectionTitle}>Top 10 w Polsce dzisiaj</Text>
-                <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.topScroll}>
-                  {top10.map((m, i) => (
-                    <TouchableOpacity key={m.id} activeOpacity={0.85} style={styles.topItem} onPress={() => openDetail(m.id)}>
-                      <Text style={styles.topRank}>{i + 1}</Text>
-                      <Image source={m.poster} style={styles.topPoster} contentFit="cover" />
-                    </TouchableOpacity>
-                  ))}
-                </ScrollView>
-              </View>
-            )}
-
-            {rows.map((row) => (
-              <MovieRow key={row.title} title={row.title} movies={row.movies} onPressMovie={openDetail} />
-            ))}
-          </View>
-        </ScrollView>
-      ) : (
-        // ---- SERIES grid ----
-        <FlatList
-          data={series}
-          key={GRID_COLS}
-          numColumns={GRID_COLS}
-          keyExtractor={(s) => s.id}
-          showsVerticalScrollIndicator={false}
-          refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={colors.primary} />}
-          contentContainerStyle={{ paddingTop: insets.top + 96, paddingHorizontal: PAD, paddingBottom: spacing.xxl, gap: spacing.lg }}
-          columnWrapperStyle={{ gap: GAP }}
-          ListEmptyComponent={<Text style={styles.empty}>Brak seriali.</Text>}
-          renderItem={({ item }) => {
-            const w = (width - PAD * 2 - GAP * (GRID_COLS - 1)) / GRID_COLS;
-            return (
-              <TouchableOpacity activeOpacity={0.85} style={{ width: w }} onPress={() => navigation.navigate('SeriesDetail', { seriesId: item.id })}>
-                <Image source={item.poster} style={{ width: w, height: w * 1.5, borderRadius: radius.sm, backgroundColor: colors.surfaceAlt }} contentFit="cover" />
-                <Text numberOfLines={1} style={styles.gridName}>{item.title}</Text>
-              </TouchableOpacity>
-            );
-          }}
-        />
-      )}
-
-      {TopBar}
+      {tab === 'movies' ? MoviesBody : SeriesBody}
 
       {searchOpen && (
         <BlurView intensity={60} tint="dark" style={StyleSheet.absoluteFill}>
           <LinearGradient colors={['rgba(11,11,15,0.55)', 'rgba(11,11,15,0.35)', 'rgba(11,11,15,0.85)']} style={StyleSheet.absoluteFill} pointerEvents="none" />
           <View style={{ flex: 1, paddingTop: insets.top + spacing.sm }}>
             <View style={styles.searchBar}>
-              <TouchableOpacity hitSlop={10} onPress={closeSearch}>
-                <Ionicons name="chevron-back" size={26} color={colors.text} />
-              </TouchableOpacity>
+              <TouchableOpacity hitSlop={10} onPress={closeSearch}><Ionicons name="chevron-back" size={26} color={colors.text} /></TouchableOpacity>
               <BlurView intensity={40} tint="light" style={styles.searchInputWrap}>
                 <Ionicons name="search" size={18} color={colors.text} />
                 <TextInput style={styles.searchInput} placeholder="Szukaj filmów…" placeholderTextColor={colors.textMuted}
@@ -291,29 +275,25 @@ export default function HomeScreen({ navigation }: { navigation: Nav }) {
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.background },
   center: { alignItems: 'center', justifyContent: 'center' },
-  topBar: { position: 'absolute', top: 0, left: 0, right: 0, zIndex: 5, paddingHorizontal: spacing.lg, paddingBottom: spacing.sm },
-  brandRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
-  brand: { color: colors.text, fontSize: 22, fontWeight: '900', letterSpacing: 1, textShadowColor: 'rgba(0,0,0,0.6)', textShadowRadius: 4 },
-  pills: { flexDirection: 'row', gap: spacing.sm, marginTop: spacing.sm },
-  pill: { paddingHorizontal: spacing.lg, paddingVertical: 6, borderRadius: radius.pill, backgroundColor: colors.overlay },
+  header: { paddingHorizontal: spacing.lg, paddingBottom: spacing.md },
+  headerRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
+  pageTitle: { color: colors.text, fontSize: 30, fontWeight: '900' },
+  pills: { flexDirection: 'row', gap: spacing.sm, marginTop: spacing.md },
+  pill: { paddingHorizontal: spacing.lg, paddingVertical: 7, borderRadius: radius.pill, backgroundColor: colors.surfaceAlt },
   pillActive: { backgroundColor: colors.primary },
   pillText: { color: colors.text, fontSize: 13, fontWeight: '700' },
   pillTextActive: { color: colors.onPrimary },
-  heroContent: { position: 'absolute', bottom: spacing.xl, left: 0, right: 0, paddingHorizontal: spacing.lg, alignItems: 'center' },
-  heroTitle: { color: colors.text, fontSize: 30, fontWeight: '900', textAlign: 'center' },
-  heroTags: { flexDirection: 'row', gap: spacing.sm, marginTop: spacing.sm, flexWrap: 'wrap', justifyContent: 'center' },
-  heroTag: { color: colors.textMuted, fontSize: 13, fontWeight: '600' },
-  heroBtns: { flexDirection: 'row', gap: spacing.md, marginTop: spacing.lg },
-  playBtn: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm, backgroundColor: colors.text, paddingVertical: spacing.md, paddingHorizontal: spacing.xl, borderRadius: radius.sm },
-  playText: { color: '#000', fontSize: 15, fontWeight: '800' },
-  infoBtn: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm, backgroundColor: colors.surfaceAlt, paddingVertical: spacing.md, paddingHorizontal: spacing.xl, borderRadius: radius.sm },
-  infoText: { color: colors.text, fontSize: 15, fontWeight: '700' },
-  dots: { position: 'absolute', bottom: spacing.sm, left: 0, right: 0, flexDirection: 'row', justifyContent: 'center', gap: 6 },
+  card: { borderRadius: radius.lg, overflow: 'hidden', backgroundColor: colors.surfaceAlt },
+  cardInfo: { position: 'absolute', left: 0, right: 0, bottom: 0, alignItems: 'center', paddingHorizontal: spacing.lg, paddingBottom: spacing.xl },
+  newBadge: { backgroundColor: colors.text, paddingHorizontal: spacing.sm, paddingVertical: 3, borderRadius: radius.sm, marginBottom: spacing.md },
+  newBadgeText: { color: '#000', fontSize: 11, fontWeight: '800' },
+  cardTitle: { color: colors.text, fontSize: 20, fontWeight: '900', textAlign: 'center' },
+  cardMeta: { color: colors.textMuted, fontSize: 13, fontWeight: '600', marginTop: spacing.sm },
+  dots: { flexDirection: 'row', justifyContent: 'center', gap: 6, marginTop: spacing.md },
   dot: { width: 6, height: 6, borderRadius: 3, backgroundColor: colors.textFaint },
   dotActive: { backgroundColor: colors.primary, width: 18 },
-  rows: { marginTop: spacing.xl },
-  section: { marginBottom: spacing.xl },
-  sectionTitle: { color: colors.text, fontSize: 18, fontWeight: '700', paddingHorizontal: spacing.lg, marginBottom: spacing.md },
+  section: { marginTop: spacing.xl },
+  sectionTitle: { color: colors.text, fontSize: 20, fontWeight: '800', paddingHorizontal: spacing.lg, marginBottom: spacing.md },
   hScroll: { paddingHorizontal: spacing.lg, gap: spacing.md },
   cwCard: { width: 150 },
   cwPoster: { width: 150, height: 90, borderRadius: radius.sm, backgroundColor: colors.surfaceAlt },
