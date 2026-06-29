@@ -37,6 +37,17 @@ Score the task across these factors. Many "high" factors → higher tier; mostly
 19. **Cost of being wrong** — trivial rework (down) vs. outage, breach, lost deal, rollback (up).
 20. **Reuse / longevity** — one-off (down) vs. becomes a long-lived standard others depend on (up).
 
+### Additional routing-specific variables (21–27) — model-capability factors
+These complement 1–20; they're about what the *model* needs, not just task stakes.
+
+21. **Ground-truth availability** — answer checkable against tests/docs/a source (down, cheaper tier ok) vs. no way to verify (up).
+22. **Hallucination / fabrication risk** — low-consequence or self-evident (down) vs. confident-wrong is costly and unverifiable (up).
+23. **Tool-use / agentic depth** — zero or one tool call (down) vs. long interactive multi-tool loops needing planning + recovery (up; also decompose).
+24. **Context-window fit** — input fits a small read (down) vs. exceeds window, needs chunking/retrieval/summarization strategy (up).
+25. **Multimodality** — pure text (down) vs. must parse images/PDF/audio/video/diagrams (up; ensure the chosen tier handles it).
+26. **Latency / interactivity SLA** — batch / async ok (down) vs. realtime user-facing turn where speed matters (favor Haiku/fast tiers if quality allows).
+27. **Parallelizability** — atomic (process whole) vs. decomposable into many independent subtasks (run cheap tier in parallel, reserve expensive tier for the merge/hard core).
+
 ## Tier definitions (the rubric the variables map onto)
 - **Haiku** — mechanical, well-specified, low-risk, few steps, easily verified, or short factual recall. Mostly transformation/lookup, not judgment.
 - **Sonnet (default)** — multi-step reasoning, synthesis across a few sources, normal professional judgment, moderate risk, drafting/reviewing real work. Use unless clearly trivial (→Haiku) or clearly hard (→Opus).
