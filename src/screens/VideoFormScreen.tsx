@@ -18,7 +18,7 @@ import * as ImagePicker from 'expo-image-picker';
 import * as DocumentPicker from 'expo-document-picker';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import type { RouteProp } from '@react-navigation/native';
-import { colors, radius, spacing } from '../theme';
+import { colors, radius, spacing, typography } from '../theme';
 import {
   createVideo,
   updateVideo,
@@ -155,11 +155,11 @@ export default function VideoFormScreen({ navigation, route }: { navigation: Nav
       behavior={Platform.OS === 'ios' ? 'padding' : undefined}
     >
       <View style={[styles.topBar, { paddingTop: insets.top + spacing.sm }]}>
-        <TouchableOpacity hitSlop={10} onPress={() => navigation.goBack()}>
+        <TouchableOpacity hitSlop={10} onPress={() => navigation.goBack()} accessibilityRole="button" accessibilityLabel="Close">
           <Ionicons name="close" size={26} color={colors.text} />
         </TouchableOpacity>
         <Text style={styles.topTitle}>{isEdit ? 'Edit film' : 'Add film'}</Text>
-        <TouchableOpacity hitSlop={10} onPress={onSave} disabled={saving}>
+        <TouchableOpacity hitSlop={10} onPress={onSave} disabled={saving} accessibilityRole="button" accessibilityLabel={isEdit ? 'Save' : 'Create'}>
           {saving ? (
             <ActivityIndicator color={colors.primary} />
           ) : (
@@ -173,7 +173,7 @@ export default function VideoFormScreen({ navigation, route }: { navigation: Nav
         keyboardShouldPersistTaps="handled"
       >
         {/* Poster */}
-        <TouchableOpacity style={styles.posterPick} activeOpacity={0.85} onPress={pickPoster}>
+        <TouchableOpacity style={styles.posterPick} activeOpacity={0.85} onPress={pickPoster} accessibilityRole="button" accessibilityLabel="Choose poster image">
           {posterPreview ? (
             <Image source={posterPreview} style={styles.posterImg} contentFit="cover" />
           ) : (
@@ -189,7 +189,7 @@ export default function VideoFormScreen({ navigation, route }: { navigation: Nav
 
         {/* Video (add only) */}
         {!isEdit && (
-          <TouchableOpacity style={styles.videoPick} activeOpacity={0.85} onPress={pickVideo}>
+          <TouchableOpacity style={styles.videoPick} activeOpacity={0.85} onPress={pickVideo} accessibilityRole="button" accessibilityLabel="Pick video file">
             <Ionicons name={video ? 'checkmark-circle' : 'cloud-upload-outline'} size={22} color={video ? colors.primary : colors.text} />
             <Text style={styles.videoPickText} numberOfLines={1}>
               {video ? video.name : 'Pick video file *'}
@@ -246,7 +246,7 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1,
     borderBottomColor: colors.border,
   },
-  topTitle: { color: colors.text, fontSize: 17, fontWeight: '800' },
+  topTitle: { color: colors.text, ...typography.h3, fontWeight: '800' },
   save: { color: colors.primary, fontSize: 16, fontWeight: '800' },
   posterPick: { alignSelf: 'center', marginBottom: spacing.sm },
   posterImg: { width: 130, height: 195, borderRadius: radius.md, backgroundColor: colors.surfaceAlt },
@@ -276,7 +276,7 @@ const styles = StyleSheet.create({
     padding: spacing.md,
   },
   videoPickText: { color: colors.text, fontSize: 14, fontWeight: '600', flex: 1 },
-  label: { color: colors.textMuted, fontSize: 12, fontWeight: '700' },
+  label: { color: colors.textMuted, ...typography.caption, fontWeight: '700' },
   input: {
     backgroundColor: colors.surface,
     borderWidth: 1,

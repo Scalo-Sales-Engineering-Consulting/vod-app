@@ -1,5 +1,7 @@
-import React from 'react';
+import React, { useState } from 'react';
 import {
+  Alert,
+  Share,
   ScrollView,
   StyleSheet,
   Text,
@@ -12,7 +14,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import type { RouteProp } from '@react-navigation/native';
-import { colors, radius, spacing, withAlpha } from '../theme';
+import { colors, radius, spacing, touchTarget, typography, withAlpha } from '../theme';
 import { useCatalog } from '../context/CatalogContext';
 import { useFavorites } from '../context/FavoritesContext';
 import MovieCard from '../components/MovieCard';
@@ -26,6 +28,7 @@ export default function DetailScreen({ navigation, route }: { navigation: Nav; r
   const { isFavorite, toggleFavorite } = useFavorites();
   const { getMovie, movies } = useCatalog();
   const movie = getMovie(route.params.movieId);
+  const [expanded, setExpanded] = useState(false);
 
   if (!movie) {
     return (
@@ -34,6 +37,15 @@ export default function DetailScreen({ navigation, route }: { navigation: Nav; r
       </View>
     );
   }
+
+  const onShare = () => {
+    Share.share({
+      message: `Watch "${movie.title}" (${movie.year}) on StreamX`,
+      title: movie.title,
+    }).catch(() => {});
+  };
+  const onDownload = () =>
+    Alert.alert('Downloads', 'Offline downloads are coming soon to StreamX.');
 
   // Face-aware vertical crop: position the cover image on the poster's focal Y
   // so faces aren't cut off the top or bottom.
@@ -69,7 +81,9 @@ export default function DetailScreen({ navigation, route }: { navigation: Nav; r
         <TouchableOpacity
           style={[styles.back, { top: insets.top + spacing.sm }]}
           onPress={() => navigation.goBack()}
-          hitSlop={10}
+          hitSlop={8}
+          accessibilityRole="button"
+          accessibilityLabel="Go back"
         >
           <Ionicons name="chevron-back" size={26} color={colors.text} />
         </TouchableOpacity>
@@ -101,13 +115,22 @@ export default function DetailScreen({ navigation, route }: { navigation: Nav; r
           style={styles.playBtn}
           activeOpacity={0.85}
           onPress={() => navigation.navigate('Player', { movieId: movie.id })}
+          accessibilityRole="button"
+          accessibilityLabel={`Play ${movie.title}`}
         >
-          <Ionicons name="play" size={20} color="#000" />
+          <Ionicons name="play" size={20} color={colors.onPrimary} />
           <Text style={styles.playText}>Play</Text>
         </TouchableOpacity>
 
         <View style={styles.actions}>
-          <TouchableOpacity style={styles.action} onPress={() => toggleFavorite(movie.id)}>
+          <TouchableOpacity
+            style={styles.action}
+            onPress={() => toggleFavorite(movie.id)}
+            hitSlop={8}
+            accessibilityRole="button"
+            accessibilityState={{ selected: fav }}
+            accessibilityLabel={fav ? 'Remove from My List' : 'Add to My List'}
+          >
             <Ionicons
               name={fav ? 'heart' : 'heart-outline'}
               size={24}
@@ -115,17 +138,41 @@ export default function DetailScreen({ navigation, route }: { navigation: Nav; r
             />
             <Text style={styles.actionText}>{fav ? 'Saved' : 'My List'}</Text>
           </TouchableOpacity>
-          <TouchableOpacity style={styles.action}>
+          <TouchableOpacity
+            style={styles.action}
+            onPress={onDownload}
+            hitSlop={8}
+            accessibilityRole="button"
+            accessibilityLabel="Download"
+          >
             <Ionicons name="download-outline" size={24} color={colors.text} />
             <Text style={styles.actionText}>Download</Text>
           </TouchableOpacity>
-          <TouchableOpacity style={styles.action}>
+          <TouchableOpacity
+            style={styles.action}
+            onPress={onShare}
+            hitSlop={8}
+            accessibilityRole="button"
+            accessibilityLabel="Share"
+          >
             <Ionicons name="share-social-outline" size={24} color={colors.text} />
             <Text style={styles.actionText}>Share</Text>
           </TouchableOpacity>
         </View>
 
-        <Text style={styles.description}>{movie.description}</Text>
+        <Text style={styles.description} numberOfLines={expanded ? undefined : 4}>
+          {movie.description}
+        </Text>
+        {movie.description.length > 140 && (
+          <TouchableOpacity
+            onPress={() => setExpanded((e) => !e)}
+            hitSlop={8}
+            accessibilityRole="button"
+            accessibilityLabel={expanded ? 'Show less' : 'Show more'}
+          >
+            <Text style={styles.more}>{expanded ? 'Show less' : 'Show more'}</Text>
+          </TouchableOpacity>
+        )}
 
         {similar.length > 0 && (
           <View style={styles.similar}>
@@ -159,19 +206,19 @@ const styles = StyleSheet.create({
   back: {
     position: 'absolute',
     left: spacing.lg,
-    width: 38,
-    height: 38,
+    width: touchTarget,
+    height: touchTarget,
     borderRadius: radius.pill,
     backgroundColor: colors.overlay,
     alignItems: 'center',
     justifyContent: 'center',
   },
   body: { paddingHorizontal: spacing.lg, marginTop: -64 },
-  title: { color: colors.text, fontSize: 22, fontWeight: '900' },
+  title: { color: colors.text, ...typography.h2, fontWeight: '900' },
   metaRow: { flexDirection: 'row', alignItems: 'center', gap: spacing.md, marginTop: spacing.sm },
   ratingRow: { flexDirection: 'row', alignItems: 'center', gap: 4 },
-  rating: { color: colors.text, fontSize: 14, fontWeight: '700' },
-  metaText: { color: colors.textMuted, fontSize: 14 },
+  rating: { color: colors.text, ...typography.bodyStrong },
+  metaText: { color: colors.textMuted, ...typography.body },
   maturity: { borderWidth: 1, borderColor: colors.textFaint, borderRadius: 4, paddingHorizontal: 6, paddingVertical: 1 },
   maturityText: { color: colors.textMuted, fontSize: 11, fontWeight: '700' },
   genres: { flexDirection: 'row', gap: spacing.sm, marginTop: spacing.md, flexWrap: 'wrap' },
@@ -187,16 +234,18 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     gap: spacing.sm,
-    backgroundColor: colors.text,
+    backgroundColor: colors.primary,
+    minHeight: touchTarget,
     paddingVertical: spacing.md,
     borderRadius: radius.sm,
     marginTop: spacing.lg,
   },
-  playText: { color: '#000', fontSize: 16, fontWeight: '800' },
+  playText: { color: colors.onPrimary, fontSize: 16, fontWeight: '800' },
   actions: { flexDirection: 'row', justifyContent: 'space-around', marginTop: spacing.lg },
-  action: { alignItems: 'center', gap: 4 },
-  actionText: { color: colors.textMuted, fontSize: 12, fontWeight: '600' },
-  description: { color: colors.text, fontSize: 14, lineHeight: 21, marginTop: spacing.md, opacity: 0.9 },
+  action: { alignItems: 'center', gap: 4, minWidth: touchTarget, paddingVertical: spacing.xs },
+  actionText: { color: colors.textMuted, ...typography.caption, fontWeight: '600' },
+  description: { color: colors.text, ...typography.body, marginTop: spacing.md, opacity: 0.9 },
+  more: { color: colors.primary, ...typography.label, marginTop: spacing.sm },
   similar: { marginTop: spacing.lg },
-  similarTitle: { color: colors.text, fontSize: 18, fontWeight: '700', marginBottom: spacing.md },
+  similarTitle: { color: colors.text, ...typography.h3, marginBottom: spacing.md },
 });

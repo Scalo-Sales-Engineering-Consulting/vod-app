@@ -93,7 +93,7 @@ const styles = StyleSheet.create({
   form: { gap: spacing.lg },
   rememberRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
   forgot: { color: colors.primary, fontSize: 13, fontWeight: '600' },
-  error: { color: '#FF6B6B', fontSize: 13, fontWeight: '600' },
+  error: { color: colors.danger, fontSize: 13, fontWeight: '600' },
   switch: { color: colors.textMuted, fontSize: 14, textAlign: 'center' },
   switchAccent: { color: colors.primary, fontWeight: '700' },
   divider: { flexDirection: 'row', alignItems: 'center', gap: spacing.md },

@@ -18,7 +18,13 @@ export default function MovieCard({ movie, width, onPress, showMeta }: Props) {
   // Scale the overlaid title to the card size so small carousel cards stay legible.
   const titleSize = Math.max(11, Math.min(15, Math.round(width / 8)));
   return (
-    <TouchableOpacity activeOpacity={0.85} onPress={onPress} style={{ width }}>
+    <TouchableOpacity
+      activeOpacity={0.85}
+      onPress={onPress}
+      style={{ width }}
+      accessibilityRole="button"
+      accessibilityLabel={movie.title}
+    >
       <View style={[styles.posterWrap, { width, height }]}>
         <Image source={movie.poster} style={styles.poster} contentFit="cover" transition={150} />
         {/* light bottom gradient for title legibility */}

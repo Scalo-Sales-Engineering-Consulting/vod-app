@@ -12,7 +12,14 @@ export const colors = {
   textFaint: '#8B8B97', // tertiary text — raised from #6B6B78 to clear AA 4.5:1 on dark surfaces
   rating: '#F5C518', // IMDb-style gold
   overlay: 'rgba(11,11,15,0.7)',
+  // Semantic state colors (were hardcoded as '#FF6B6B' across Manage/Settings).
+  danger: '#FF6B6B', // destructive actions / error text — clears AA on dark
+  onDanger: '#2A0A0A', // text/icons on a `danger` fill
 };
+
+// Minimum interactive hit area (Apple HIG / WCAG 2.5.5). Use as width/height on
+// icon buttons, or via hitSlop to expand small touch targets up to this size.
+export const touchTarget = 44;
 
 // #rrggbb + alpha (0..1) -> rgba() string, for smooth multi-stop gradients.
 export function withAlpha(hex: string, a: number): string {
@@ -40,10 +47,19 @@ export const radius = {
   pill: 999,
 };
 
+// Type ramp. Each role carries fontSize + fontWeight + lineHeight so callers
+// don't hand-tune leading. Existing names (h1/h2/h3/body/caption) are preserved;
+// `display`, `title`, `bodyStrong`, `label`, and `overline` were added to cover
+// the page-title (28–30) and section-header (20) sizes that screens hardcoded.
 export const typography = {
-  h1: { fontSize: 28, fontWeight: '800' as const },
-  h2: { fontSize: 22, fontWeight: '700' as const },
-  h3: { fontSize: 17, fontWeight: '700' as const },
-  body: { fontSize: 14, fontWeight: '500' as const },
-  caption: { fontSize: 12, fontWeight: '500' as const },
+  display: { fontSize: 30, fontWeight: '900' as const, lineHeight: 36 }, // page titles (Home/Movies/Series)
+  h1: { fontSize: 28, fontWeight: '800' as const, lineHeight: 34 }, // screen headers (Catalog/Favorites/Manage/Settings)
+  h2: { fontSize: 22, fontWeight: '800' as const, lineHeight: 28 }, // detail titles
+  title: { fontSize: 20, fontWeight: '800' as const, lineHeight: 26 }, // section headers ("Continue Watching")
+  h3: { fontSize: 17, fontWeight: '700' as const, lineHeight: 22 }, // row titles / list headers
+  body: { fontSize: 14, fontWeight: '500' as const, lineHeight: 21 }, // body copy / descriptions
+  bodyStrong: { fontSize: 14, fontWeight: '700' as const, lineHeight: 21 }, // emphasized body
+  caption: { fontSize: 12, fontWeight: '500' as const, lineHeight: 16 }, // meta, secondary
+  label: { fontSize: 13, fontWeight: '700' as const, lineHeight: 18 }, // form labels, chips
+  overline: { fontSize: 13, fontWeight: '700' as const, lineHeight: 16, textTransform: 'uppercase' as const, letterSpacing: 0.5 }, // section eyebrows
 };

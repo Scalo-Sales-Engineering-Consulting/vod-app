@@ -10,7 +10,7 @@ import {
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useFocusEffect } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import { colors, radius, spacing } from '../theme';
+import { colors, radius, spacing, touchTarget, typography } from '../theme';
 import { useCatalog } from '../context/CatalogContext';
 import MovieCard from '../components/MovieCard';
 import type { RootStackParamList } from '../navigation/types';
@@ -71,6 +71,9 @@ export default function CatalogScreen({ navigation }: { navigation: Nav }) {
                 onPress={() => setGenre(item)}
                 style={[styles.chip, active && styles.chipActive]}
                 activeOpacity={0.8}
+                accessibilityRole="button"
+                accessibilityState={{ selected: active }}
+                accessibilityLabel={`Filter by ${item}`}
               >
                 <Text style={[styles.chipText, active && styles.chipTextActive]}>{item}</Text>
               </TouchableOpacity>
@@ -95,6 +98,7 @@ export default function CatalogScreen({ navigation }: { navigation: Nav }) {
             paddingBottom: spacing.xxl,
             gap: spacing.lg,
           }}
+          ListEmptyComponent={<Text style={styles.empty}>No titles in {genre}.</Text>}
           renderItem={({ item }) => (
             <MovieCard
               movie={item}
@@ -113,13 +117,14 @@ const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.background },
   header: {
     color: colors.text,
-    fontSize: 28,
-    fontWeight: '800',
+    ...typography.h1,
     paddingHorizontal: H_PADDING,
     marginBottom: spacing.lg,
   },
   chipsWrap: { marginBottom: spacing.lg },
   chip: {
+    minHeight: 36,
+    justifyContent: 'center',
     paddingHorizontal: spacing.lg,
     paddingVertical: spacing.sm,
     borderRadius: radius.pill,
@@ -128,6 +133,7 @@ const styles = StyleSheet.create({
     borderColor: colors.border,
   },
   chipActive: { backgroundColor: colors.primary, borderColor: colors.primary },
-  chipText: { color: colors.textMuted, fontSize: 13, fontWeight: '600' },
+  chipText: { color: colors.textMuted, ...typography.label, fontWeight: '600' },
   chipTextActive: { color: colors.onPrimary, fontWeight: '700' },
+  empty: { color: colors.textMuted, ...typography.body, textAlign: 'center', marginTop: spacing.xxl },
 });

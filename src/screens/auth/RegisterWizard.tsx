@@ -124,7 +124,7 @@ export default function RegisterWizard({ onBack }: { onBack: () => void }) {
       <LinearGradient colors={['#13241b', colors.background, colors.background]} style={StyleSheet.absoluteFill} />
       <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} style={styles.flex}>
         <View style={[styles.header, { paddingTop: insets.top + spacing.sm }]}>
-          <TouchableOpacity onPress={() => (step === 0 ? onBack() : setStep(step - 1))} hitSlop={10}>
+          <TouchableOpacity onPress={() => (step === 0 ? onBack() : setStep(step - 1))} hitSlop={10} accessibilityRole="button" accessibilityLabel="Go back">
             <Ionicons name="chevron-back" size={26} color={colors.text} />
           </TouchableOpacity>
           <Text style={styles.stepLabel}>Step {step + 1} of {STEPS.length} · {STEPS[step]}</Text>
@@ -198,7 +198,7 @@ function AccountStep({ form, set, onNext }: { form: Form; set: (p: Partial<Form>
     form.tos;
 
   const hintColor = (free: boolean | null, bad: boolean) =>
-    bad ? '#FF6B6B' : free === true ? colors.primary : free === false ? '#FF6B6B' : colors.textFaint;
+    bad ? colors.danger : free === true ? colors.primary : free === false ? colors.danger : colors.textFaint;
 
   return (
     <View style={styles.step}>
@@ -218,7 +218,7 @@ function AccountStep({ form, set, onNext }: { form: Form; set: (p: Partial<Form>
         label="Password" placeholder="at least 8 characters" secureTextEntry
         value={form.password} onChangeText={(t) => set({ password: t })}
         hint={form.password && form.password.length < 8 ? 'Too short' : undefined}
-        hintColor="#FF6B6B"
+        hintColor={colors.danger}
       />
 
       <Text style={styles.fieldLabel}>Profile type</Text>
@@ -268,7 +268,7 @@ function AboutStep({ form, set, onNext }: { form: Form; set: (p: Partial<Form>) 
       <Field
         label="Date of birth" placeholder="YYYY-MM-DD" keyboardType="number-pad"
         value={form.birthdate} onChangeText={onBirth}
-        hint={bad ? 'Enter a valid date (you must be 13+)' : undefined} hintColor="#FF6B6B"
+        hint={bad ? 'Enter a valid date (you must be 13+)' : undefined} hintColor={colors.danger}
       />
 
       <Text style={styles.fieldLabel}>Country</Text>
@@ -448,7 +448,7 @@ function ResultScreen({
   return (
     <View style={[styles.container, styles.resultWrap, { paddingTop: insets.top }]}>
       <LinearGradient colors={[result.ok ? '#13241b' : '#2a1414', colors.background, colors.background]} style={StyleSheet.absoluteFill} />
-      <View style={[styles.resultIcon, { backgroundColor: result.ok ? colors.primary : '#FF6B6B' }]}>
+      <View style={[styles.resultIcon, { backgroundColor: result.ok ? colors.primary : colors.danger }]}>
         <Ionicons name={result.ok ? 'checkmark' : 'close'} size={56} color={result.ok ? colors.onPrimary : '#2a0d0d'} />
       </View>
       <Text style={styles.resultTitle}>{result.ok ? 'You’re all set!' : 'Payment failed'}</Text>
@@ -477,7 +477,7 @@ const styles = StyleSheet.create({
   step: { gap: spacing.lg },
   title: { color: colors.text, fontSize: 26, fontWeight: '900' },
   note: { color: colors.textMuted, fontSize: 13, lineHeight: 19 },
-  error: { color: '#FF6B6B', fontSize: 14, fontWeight: '600' },
+  error: { color: colors.danger, fontSize: 14, fontWeight: '600' },
   fieldLabel: { color: colors.textMuted, fontSize: 13, fontWeight: '600' },
   segment: { flexDirection: 'row', gap: spacing.md },
   segBtn: { flex: 1, flexDirection: 'row', gap: 6, alignItems: 'center', justifyContent: 'center', paddingVertical: spacing.md, borderRadius: radius.md, backgroundColor: colors.surface, borderWidth: 1, borderColor: colors.border },

@@ -68,7 +68,7 @@ export default function ForgotPasswordScreen({ onBack }: { onBack: () => void })
           keyboardShouldPersistTaps="handled"
           showsVerticalScrollIndicator={false}
         >
-          <TouchableOpacity style={styles.back} onPress={onBack} hitSlop={10}>
+          <TouchableOpacity style={styles.back} onPress={onBack} hitSlop={10} accessibilityRole="button" accessibilityLabel="Back to sign in">
             <Ionicons name="chevron-back" size={24} color={colors.text} />
             <Text style={styles.backText}>Sign in</Text>
           </TouchableOpacity>
@@ -121,5 +121,5 @@ const styles = StyleSheet.create({
   sub: { color: colors.textMuted, fontSize: 14, marginTop: spacing.sm, marginBottom: spacing.xl, lineHeight: 20 },
   form: { gap: spacing.lg },
   notice: { color: colors.primary, fontSize: 13, fontWeight: '600' },
-  error: { color: '#FF6B6B', fontSize: 13, fontWeight: '600' },
+  error: { color: colors.danger, fontSize: 13, fontWeight: '600' },
 });

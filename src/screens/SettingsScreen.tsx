@@ -13,7 +13,7 @@ import {
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { colors, radius, spacing } from '../theme';
+import { colors, radius, spacing, touchTarget, typography } from '../theme';
 import { useProfile } from '../context/ProfileContext';
 import { useAuth } from '../context/AuthContext';
 import {
@@ -194,7 +194,7 @@ export default function SettingsScreen() {
                   </View>
                 )}
               </View>
-              <TouchableOpacity hitSlop={8} onPress={beginEdit}>
+              <TouchableOpacity hitSlop={12} onPress={beginEdit} accessibilityRole="button" accessibilityLabel="Edit account">
                 <Ionicons name="create-outline" size={22} color={colors.textMuted} />
               </TouchableOpacity>
             </>
@@ -231,10 +231,10 @@ export default function SettingsScreen() {
             {account.subscription_active && (
               <>
                 <View style={styles.divider} />
-                <TouchableOpacity style={styles.row} onPress={onCancelSub} disabled={working}>
+                <TouchableOpacity style={styles.row} onPress={onCancelSub} disabled={working} accessibilityRole="button" accessibilityLabel="Cancel subscription">
                   <View style={styles.rowLeft}>
-                    <View style={styles.iconCircle}><Ionicons name="close-circle" size={18} color="#FF6B6B" /></View>
-                    <Text style={[styles.rowLabel, { color: '#FF6B6B' }]}>Cancel subscription</Text>
+                    <View style={styles.iconCircle}><Ionicons name="close-circle" size={18} color={colors.danger} /></View>
+                    <Text style={[styles.rowLabel, { color: colors.danger }]}>Cancel subscription</Text>
                   </View>
                 </TouchableOpacity>
               </>
@@ -272,7 +272,7 @@ export default function SettingsScreen() {
         <SettingRow icon="wifi" label="Download over Wi-Fi only" toggle on={downloadWifi} onToggle={setDownloadWifi} />
       </View>
 
-      <TouchableOpacity style={styles.signOut} activeOpacity={0.85} onPress={signOut}>
+      <TouchableOpacity style={styles.signOut} activeOpacity={0.85} onPress={signOut} accessibilityRole="button" accessibilityLabel="Sign out">
         <Ionicons name="log-out-outline" size={18} color={colors.primary} />
         <Text style={styles.signOutText}>Sign out</Text>
       </TouchableOpacity>
@@ -337,7 +337,7 @@ function SettingRow({ icon, label, value, toggle, on, onToggle }: RowProps) {
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.background },
-  header: { color: colors.text, fontSize: 28, fontWeight: '800', paddingHorizontal: spacing.lg },
+  header: { color: colors.text, ...typography.h1, paddingHorizontal: spacing.lg },
   profile: { flexDirection: 'row', alignItems: 'center', gap: spacing.md, backgroundColor: colors.surface, margin: spacing.lg, padding: spacing.lg, borderRadius: radius.lg },
   avatarCircle: { width: 64, height: 64, borderRadius: radius.pill, backgroundColor: colors.primary, alignItems: 'center', justifyContent: 'center' },
   avatarInitial: { color: colors.onPrimary, fontSize: 28, fontWeight: '900' },
@@ -346,7 +346,7 @@ const styles = StyleSheet.create({
   editLink: { color: colors.primary, fontWeight: '700' },
   editInput: { backgroundColor: colors.surfaceAlt, borderRadius: radius.sm, paddingHorizontal: spacing.md, paddingVertical: spacing.sm, color: colors.text, fontSize: 14 },
   editBtns: { flexDirection: 'row', gap: spacing.sm, marginTop: 2 },
-  smallBtn: { flex: 1, backgroundColor: colors.primary, borderRadius: radius.sm, paddingVertical: spacing.sm, alignItems: 'center' },
+  smallBtn: { flex: 1, backgroundColor: colors.primary, borderRadius: radius.sm, minHeight: touchTarget, justifyContent: 'center', paddingVertical: spacing.sm, alignItems: 'center' },
   smallBtnText: { color: colors.onPrimary, fontWeight: '800' },
   smallBtnGhost: { backgroundColor: 'transparent', borderWidth: 1, borderColor: colors.border },
   smallBtnGhostText: { color: colors.text, fontWeight: '700' },

@@ -13,7 +13,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useFocusEffect } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import { colors, radius, spacing } from '../theme';
+import { colors, radius, spacing, touchTarget, typography } from '../theme';
 import { fetchMyVideos, deleteVideo, posterAbs, type VideoWithStream } from '../lib/api';
 import { useCatalog } from '../context/CatalogContext';
 import type { RootStackParamList } from '../navigation/types';
@@ -24,7 +24,7 @@ const STATUS_COLOR: Record<VideoWithStream['status'], string> = {
   ready: colors.primary,
   processing: colors.rating,
   uploaded: colors.textMuted,
-  failed: '#FF6B6B',
+  failed: colors.danger,
 };
 
 export default function ManageScreen({ navigation }: { navigation: Nav }) {
@@ -80,6 +80,8 @@ export default function ManageScreen({ navigation }: { navigation: Nav }) {
           style={styles.addBtn}
           activeOpacity={0.85}
           onPress={() => navigation.navigate('VideoForm', {})}
+          accessibilityRole="button"
+          accessibilityLabel="Add film"
         >
           <Ionicons name="add" size={20} color={colors.onPrimary} />
           <Text style={styles.addText}>Add film</Text>
@@ -138,11 +140,19 @@ export default function ManageScreen({ navigation }: { navigation: Nav }) {
                   hitSlop={10}
                   style={styles.iconBtn}
                   onPress={() => navigation.navigate('VideoForm', { videoId: item.id })}
+                  accessibilityRole="button"
+                  accessibilityLabel={`Edit ${item.title}`}
                 >
                   <Ionicons name="create-outline" size={22} color={colors.text} />
                 </TouchableOpacity>
-                <TouchableOpacity hitSlop={10} style={styles.iconBtn} onPress={() => confirmDelete(item)}>
-                  <Ionicons name="trash-outline" size={22} color="#FF6B6B" />
+                <TouchableOpacity
+                  hitSlop={10}
+                  style={styles.iconBtn}
+                  onPress={() => confirmDelete(item)}
+                  accessibilityRole="button"
+                  accessibilityLabel={`Delete ${item.title}`}
+                >
+                  <Ionicons name="trash-outline" size={22} color={colors.danger} />
                 </TouchableOpacity>
               </View>
             </TouchableOpacity>
@@ -162,28 +172,31 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing.lg,
     marginBottom: spacing.sm,
   },
-  header: { color: colors.text, fontSize: 28, fontWeight: '800' },
+  header: { color: colors.text, ...typography.h1 },
   addBtn: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 4,
     backgroundColor: colors.primary,
+    minHeight: touchTarget,
     paddingVertical: spacing.sm,
     paddingHorizontal: spacing.md,
     borderRadius: radius.pill,
   },
   addText: { color: colors.onPrimary, fontWeight: '800', fontSize: 13 },
   center: { flex: 1, alignItems: 'center', justifyContent: 'center', gap: spacing.sm, padding: spacing.xl },
-  errText: { color: colors.text, fontSize: 16, fontWeight: '700', marginTop: spacing.sm },
-  errSub: { color: colors.textMuted, fontSize: 12, textAlign: 'center' },
+  errText: { color: colors.text, ...typography.h3, marginTop: spacing.sm },
+  errSub: { color: colors.textMuted, ...typography.caption, textAlign: 'center' },
   retry: {
     marginTop: spacing.md,
+    minHeight: touchTarget,
+    justifyContent: 'center',
     backgroundColor: colors.surfaceAlt,
     paddingVertical: spacing.sm,
     paddingHorizontal: spacing.xl,
     borderRadius: radius.pill,
   },
-  retryText: { color: colors.text, fontWeight: '700' },
+  retryText: { color: colors.text, ...typography.bodyStrong },
   row: {
     flexDirection: 'row',
     backgroundColor: colors.surface,

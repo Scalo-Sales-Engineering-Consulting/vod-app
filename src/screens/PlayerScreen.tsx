@@ -17,7 +17,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { useVideoPlayer, VideoView } from 'expo-video';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import type { RouteProp } from '@react-navigation/native';
-import { colors, spacing } from '../theme';
+import { colors, spacing, typography } from '../theme';
 import { useCatalog } from '../context/CatalogContext';
 import { putProgress } from '../lib/api';
 import type { RootStackParamList } from '../navigation/types';
@@ -192,7 +192,13 @@ export default function PlayerScreen({ navigation, route }: { navigation: Nav; r
 
   const Scrubber = (
     <>
-      <Pressable onPress={seek} style={styles.trackHit}>
+      <Pressable
+        onPress={seek}
+        style={styles.trackHit}
+        accessibilityRole="adjustable"
+        accessibilityLabel="Seek bar"
+        accessibilityValue={{ now: Math.round(progress * 100), min: 0, max: 100 }}
+      >
         <View style={styles.track} onLayout={onTrackLayout}>
           <View style={[styles.fill, { width: `${progress * 100}%` }]} />
           <View style={[styles.knob, { left: Math.max(0, progress * trackW - 7) }]} />
@@ -207,13 +213,13 @@ export default function PlayerScreen({ navigation, route }: { navigation: Nav; r
 
   const Transport = (
     <View style={styles.centerRow}>
-      <TouchableOpacity hitSlop={12} onPress={() => skip(-10)}>
+      <TouchableOpacity hitSlop={12} onPress={() => skip(-10)} accessibilityRole="button" accessibilityLabel="Skip back 10 seconds">
         <Ionicons name="play-back" size={34} color={colors.text} />
       </TouchableOpacity>
-      <TouchableOpacity hitSlop={12} style={styles.playBig} onPress={togglePlay}>
-        <Ionicons name={playing ? 'pause' : 'play'} size={40} color="#000" />
+      <TouchableOpacity hitSlop={12} style={styles.playBig} onPress={togglePlay} accessibilityRole="button" accessibilityLabel={playing ? 'Pause' : 'Play'}>
+        <Ionicons name={playing ? 'pause' : 'play'} size={40} color={colors.background} />
       </TouchableOpacity>
-      <TouchableOpacity hitSlop={12} onPress={() => skip(10)}>
+      <TouchableOpacity hitSlop={12} onPress={() => skip(10)} accessibilityRole="button" accessibilityLabel="Skip forward 10 seconds">
         <Ionicons name="play-forward" size={34} color={colors.text} />
       </TouchableOpacity>
     </View>
@@ -245,13 +251,13 @@ export default function PlayerScreen({ navigation, route }: { navigation: Nav; r
           {controls && !buffering && (
             <>
               <View style={[styles.topBar, { paddingTop: spacing.lg, paddingHorizontal: pad }]}>
-                <TouchableOpacity hitSlop={12} onPress={closePlayer}>
+                <TouchableOpacity hitSlop={12} onPress={closePlayer} accessibilityRole="button" accessibilityLabel="Minimize player">
                   <Ionicons name="chevron-down" size={28} color={colors.text} />
                 </TouchableOpacity>
                 <Text numberOfLines={1} style={styles.topTitle}>
                   {movie.title}
                 </Text>
-                <TouchableOpacity hitSlop={12} onPress={closePlayer}>
+                <TouchableOpacity hitSlop={12} onPress={closePlayer} accessibilityRole="button" accessibilityLabel="Close player">
                   <Ionicons name="close" size={26} color={colors.text} />
                 </TouchableOpacity>
               </View>
@@ -285,7 +291,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing.lg,
     paddingBottom: spacing.sm,
   },
-  topTitle: { flex: 1, color: colors.text, fontSize: 16, fontWeight: '700' },
+  topTitle: { flex: 1, color: colors.text, ...typography.h3, fontSize: 16 },
   centerRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: spacing.xxl },
   playBig: { width: 76, height: 76, borderRadius: 38, backgroundColor: colors.text, alignItems: 'center', justifyContent: 'center' },
   fsBottom: { position: 'absolute', left: 0, right: 0, bottom: 0 },
@@ -294,5 +300,5 @@ const styles = StyleSheet.create({
   fill: { height: 4, borderRadius: 2, backgroundColor: colors.primary },
   knob: { position: 'absolute', width: 14, height: 14, borderRadius: 7, backgroundColor: colors.primary },
   timeRow: { flexDirection: 'row', justifyContent: 'space-between', marginTop: 6 },
-  time: { color: colors.textMuted, fontSize: 12, fontWeight: '600' },
+  time: { color: colors.textMuted, ...typography.caption, fontWeight: '600' },
 });

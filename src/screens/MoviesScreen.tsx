@@ -3,7 +3,7 @@ import { ActivityIndicator, RefreshControl, ScrollView, StyleSheet, Text, View }
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useFocusEffect } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import { colors, spacing } from '../theme';
+import { colors, spacing, typography } from '../theme';
 import { useCatalog } from '../context/CatalogContext';
 import HeroCarousel from '../components/HeroCarousel';
 import MovieRow from '../components/MovieRow';
@@ -47,5 +47,5 @@ const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.background },
   center: { alignItems: 'center', justifyContent: 'center' },
   header: { paddingHorizontal: spacing.lg, paddingBottom: spacing.lg },
-  pageTitle: { color: colors.text, fontSize: 30, fontWeight: '900' },
+  pageTitle: { color: colors.text, ...typography.display },
 });

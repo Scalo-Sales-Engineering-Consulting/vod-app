@@ -18,7 +18,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useFocusEffect } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import { colors, radius, spacing } from '../theme';
+import { colors, radius, spacing, typography } from '../theme';
 import { useCatalog } from '../context/CatalogContext';
 import HeroCarousel, { type HeroItem } from '../components/HeroCarousel';
 import MovieRow from '../components/MovieRow';
@@ -74,7 +74,7 @@ export default function HomeScreen({ navigation }: { navigation: Nav }) {
       >
         <View style={[styles.header, { paddingTop: insets.top + spacing.sm }]}>
           <Text style={styles.pageTitle}>For You</Text>
-          <TouchableOpacity hitSlop={10} onPress={() => setSearchOpen(true)}>
+          <TouchableOpacity hitSlop={12} onPress={() => setSearchOpen(true)} accessibilityRole="button" accessibilityLabel="Search">
             <Ionicons name="search" size={24} color={colors.text} />
           </TouchableOpacity>
         </View>
@@ -88,6 +88,7 @@ export default function HomeScreen({ navigation }: { navigation: Nav }) {
               <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.hScroll}>
                 {continueWatching.map((c) => (
                   <TouchableOpacity key={c.movie.id} activeOpacity={0.85} style={styles.cwCard}
+                    accessibilityRole="button" accessibilityLabel={`Resume ${c.movie.title}`}
                     onPress={() => navigation.navigate('Player', { movieId: c.movie.id, resume: c.positionSeconds })}>
                     <Image source={c.movie.poster} style={styles.cwPoster} contentFit="cover" />
                     <View style={styles.cwPlay}><Ionicons name="play-circle" size={34} color="rgba(255,255,255,0.92)" /></View>
@@ -112,7 +113,8 @@ export default function HomeScreen({ navigation }: { navigation: Nav }) {
               <Text style={styles.sectionTitle}>Top 10 Today</Text>
               <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.topScroll}>
                 {top10.map((m, i) => (
-                  <TouchableOpacity key={m.id} activeOpacity={0.85} style={styles.topItem} onPress={() => openDetail(m.id)}>
+                  <TouchableOpacity key={m.id} activeOpacity={0.85} style={styles.topItem} onPress={() => openDetail(m.id)}
+                    accessibilityRole="button" accessibilityLabel={`Number ${i + 1}, ${m.title}`}>
                     <Text style={styles.topRank}>{i + 1}</Text>
                     <Image source={m.poster} style={styles.topPoster} contentFit="cover" />
                   </TouchableOpacity>
@@ -128,7 +130,7 @@ export default function HomeScreen({ navigation }: { navigation: Nav }) {
           <LinearGradient colors={['rgba(11,11,15,0.55)', 'rgba(11,11,15,0.35)', 'rgba(11,11,15,0.85)']} style={StyleSheet.absoluteFill} pointerEvents="none" />
           <View style={{ flex: 1, paddingTop: insets.top + spacing.sm }}>
             <View style={styles.searchBar}>
-              <TouchableOpacity hitSlop={10} onPress={closeSearch}><Ionicons name="chevron-back" size={26} color={colors.text} /></TouchableOpacity>
+              <TouchableOpacity hitSlop={10} onPress={closeSearch} accessibilityRole="button" accessibilityLabel="Close search"><Ionicons name="chevron-back" size={26} color={colors.text} /></TouchableOpacity>
               <BlurView intensity={40} tint="light" style={styles.searchInputWrap}>
                 <Ionicons name="search" size={18} color={colors.text} />
                 <TextInput style={styles.searchInput} placeholder="Search movies…" placeholderTextColor={colors.textMuted}
@@ -159,16 +161,16 @@ const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.background },
   center: { alignItems: 'center', justifyContent: 'center' },
   header: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingHorizontal: spacing.lg, paddingBottom: spacing.lg },
-  pageTitle: { color: colors.text, fontSize: 30, fontWeight: '900' },
+  pageTitle: { color: colors.text, ...typography.display },
   section: { marginTop: spacing.xl },
-  sectionTitle: { color: colors.text, fontSize: 20, fontWeight: '800', paddingHorizontal: spacing.lg, marginBottom: spacing.md },
+  sectionTitle: { color: colors.text, ...typography.title, paddingHorizontal: spacing.lg, marginBottom: spacing.md },
   hScroll: { paddingHorizontal: spacing.lg, gap: spacing.md },
   cwCard: { width: 150 },
   cwPoster: { width: 150, height: 90, borderRadius: radius.sm, backgroundColor: colors.surfaceAlt },
   cwPlay: { position: 'absolute', top: 0, left: 0, right: 0, height: 90, alignItems: 'center', justifyContent: 'center' },
   cwBar: { height: 3, backgroundColor: colors.border, borderRadius: 2, marginTop: 6, overflow: 'hidden' },
   cwFill: { height: 3, backgroundColor: colors.primary },
-  cwName: { color: colors.textMuted, fontSize: 12, fontWeight: '600', marginTop: 5 },
+  cwName: { color: colors.textMuted, ...typography.caption, fontWeight: '600', marginTop: 5 },
   topScroll: { paddingHorizontal: spacing.lg, gap: spacing.lg, alignItems: 'flex-end' },
   topItem: { flexDirection: 'row', alignItems: 'flex-end' },
   topRank: { color: colors.surfaceAlt, fontSize: 92, fontWeight: '900', lineHeight: 92, marginRight: -18, textShadowColor: colors.border, textShadowRadius: 1 },

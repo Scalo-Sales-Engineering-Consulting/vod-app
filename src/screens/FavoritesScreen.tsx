@@ -10,7 +10,7 @@ import { Image } from 'expo-image'; // renders SVG posters from backend
 import { Ionicons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import { colors, radius, spacing } from '../theme';
+import { colors, radius, spacing, typography } from '../theme';
 import { useCatalog } from '../context/CatalogContext';
 import { useFavorites } from '../context/FavoritesContext';
 import type { RootStackParamList } from '../navigation/types';
@@ -49,6 +49,8 @@ export default function FavoritesScreen({ navigation }: { navigation: Nav }) {
               style={styles.row}
               activeOpacity={0.85}
               onPress={() => navigation.navigate('Detail', { movieId: item.id })}
+              accessibilityRole="button"
+              accessibilityLabel={`Open ${item.title}`}
             >
               <Image source={item.poster} style={styles.thumb} contentFit="cover" />
               <View style={styles.rowBody}>
@@ -68,6 +70,8 @@ export default function FavoritesScreen({ navigation }: { navigation: Nav }) {
                 hitSlop={10}
                 onPress={() => toggleFavorite(item.id)}
                 style={styles.heartBtn}
+                accessibilityRole="button"
+                accessibilityLabel={`Remove ${item.title} from favorites`}
               >
                 <Ionicons name="heart" size={22} color={colors.primary} />
               </TouchableOpacity>
@@ -81,11 +85,11 @@ export default function FavoritesScreen({ navigation }: { navigation: Nav }) {
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.background },
-  header: { color: colors.text, fontSize: 28, fontWeight: '800', paddingHorizontal: spacing.lg },
-  sub: { color: colors.textMuted, fontSize: 13, paddingHorizontal: spacing.lg, marginTop: 4 },
+  header: { color: colors.text, ...typography.h1, paddingHorizontal: spacing.lg },
+  sub: { color: colors.textMuted, ...typography.label, fontWeight: '500', paddingHorizontal: spacing.lg, marginTop: 4 },
   empty: { flex: 1, alignItems: 'center', justifyContent: 'center', gap: spacing.sm, padding: spacing.xl },
-  emptyTitle: { color: colors.text, fontSize: 18, fontWeight: '700', marginTop: spacing.sm },
-  emptyText: { color: colors.textMuted, fontSize: 14, textAlign: 'center', maxWidth: 260 },
+  emptyTitle: { color: colors.text, ...typography.h3, marginTop: spacing.sm },
+  emptyText: { color: colors.textMuted, ...typography.body, textAlign: 'center', maxWidth: 260 },
   row: {
     flexDirection: 'row',
     backgroundColor: colors.surface,
