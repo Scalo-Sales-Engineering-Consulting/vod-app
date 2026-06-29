@@ -101,6 +101,21 @@ Routing a mechanical lint-style review to Haiku instead of Opus saves ~$0.078 pe
 ### Reporting cost
 When asked "how much will this cost" or after recommending a tier, give: estimated input/output tokens (note if estimated vs counted), the per-tier cost, and the cheapest-correct choice with the saving vs the next tier up.
 
+## Token-reduction playbook — cut tokens WITHOUT cutting quality
+Tier choice is one lever; token *volume* is usually the bigger one. On real workloads the dominant cost is input context (re-sent every turn) and output length — not which model ran. These levers lower spend while holding or *improving* quality (less noise → more accurate answers). Apply them on every task, independent of tier.
+
+1. **Cache the stable prefix.** Cache reads cost ~0.1× input (−90%). Keep large, unchanging context (system prompt, specs, big files) in a stable prefix and reuse it across turns instead of re-sending. Biggest single lever on long sessions — the $-heavy sessions are cache-miss sessions.
+2. **Surgical context, not whole files.** `grep`/`glob` to locate, then read only the needed line ranges. Don't load a 2k-line file to change 5 lines. Smaller, focused context is *cheaper and more accurate* — the model isn't distracted by irrelevant code.
+3. **Never re-read unchanged files.** If it hasn't changed since you read it, it's still in context — re-reading doubles its token cost for zero new information.
+4. **Decompose: cheap fan-out, expensive core.** Split a big task into independent subtasks; run the mechanical ones on Haiku in parallel and reserve Sonnet/Opus for the hard merge or the correctness-critical core (vars 23,27). You pay the top tier only for the part that needs it.
+5. **Verification gate beats rework.** A wrong cheap answer that ships and gets reworked costs more than doing it right once. Pair cheap tiers with a check (tests, read-back, diff vs requirements). The gate is what makes cheap routing *safe* — it's the quality lever and a cost lever at once.
+6. **Output discipline.** Output tokens cost 5× input. Return diffs/patches, not whole files; answer at the length the task needs; skip narration and re-statement. Terse ≠ lower quality — it's less waste.
+7. **Right-size the read budget.** Before a big read, ask "what's the smallest input that answers this?" Use summaries/retrieval for huge corpora (var 24) instead of dumping everything into context.
+8. **Batch & deduplicate tool calls.** Run independent reads/greps in parallel in one turn; don't issue the same lookup twice. Fewer round-trips = fewer re-sent contexts.
+9. **Compress long-lived context.** Memory files, standing instructions, and recurring prompts re-bill every turn — keep them tight (a caveman/compressed style on standing context pays off across a whole session).
+
+Rule of thumb: **first cut the tokens (cache + surgical context + output discipline), then pick the cheapest tier that clears the quality bar.** Volume reduction is quality-neutral or quality-positive; only tier reduction trades capability — so spend the volume levers first, the tier lever last.
+
 ---
 
 # Per-discipline routing maps

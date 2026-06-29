@@ -69,9 +69,15 @@ def main():
                    "(prod/auth/payments/data/deploy) — prioritise correctness over savings, "
                    "verify the result (tests/read-back), don't trade quality for a cheaper tier.")
 
+    # Volume levers (tier-independent, quality-neutral): biggest real savings.
+    volume = ("" if tier == "Haiku" else
+              " VOLUME: grep then read only needed line ranges (not whole files); "
+              "don't re-read unchanged files; reuse cached context; "
+              "return diffs not full files; batch independent reads in one turn.")
+
     msg = (f"token-economist: suggested model tier = {tier} ({why}). "
            "Use the cheapest tier that MEETS THE QUALITY BAR; escalate if it risks being wrong. "
-           "Delegate trivial sub-steps to Haiku agents; read only what's needed." + quality)
+           "Delegate trivial sub-steps to Haiku agents; read only what's needed." + quality + volume)
     print(json.dumps({
         "hookSpecificOutput": {
             "hookEventName": "UserPromptSubmit",
