@@ -55,6 +55,18 @@ These complement 1–20; they're about what the *model* needs, not just task sta
 
 Quick heuristic: count how many of variables 4,5,6,7,9,17,18,19 are "high." Zero → likely Haiku/Sonnet by the rest. One or two → Sonnet. Three+ → strongly consider Opus.
 
+## Quality guard — cheap must never mean wrong
+Cost is the secondary objective; **meeting the quality bar is the primary one**. Saving tokens by shipping a wrong or unverified result is a false economy — rework, outages, and lost trust cost far more than the model delta. Apply these rules:
+
+1. **Floor before savings.** Pick the cheapest tier *at or above* the task's quality bar (variables 6,9,10,19,21,22). Never drop below the floor to save money.
+2. **High-risk surfaces lock the floor.** If the task touches prod, auth/identity, payments/financial, security, secrets/PII, schema/data migrations, deletes/drops, deploys/releases, or anything irreversible → floor is **Sonnet minimum**, and these are prime Opus candidates. Do not route such work to Haiku even if the wording looks trivial.
+3. **No silent downgrade.** When you route below the apparent need to save cost, say so explicitly and name the residual risk and the verification step that covers it.
+4. **Verification gate.** For anything beyond throwaway, pair the cheap tier with a check: run tests, read back the diff, diff against requirements, or spot-verify a sample. Unverifiable + high cost-of-wrong (vars 10,19,22) → escalate a tier rather than guess.
+5. **Escalate on quality signals, not just stakes.** Repeated failures, hallucination risk, low ground-truth availability, or "confident-wrong is expensive" → step up a tier. Cheap-then-escalate is fine; cheap-and-hope is not.
+6. **Short ambiguous follow-ups inherit context.** A bare "ok" / "tak" / "gotowe" / "do it" continuing heavy work keeps the heavy task's tier — don't reset to Haiku just because the message is short.
+
+The order is always: **quality bar first, then cheapest tier that clears it.**
+
 ## Cost accounting — estimate the $ before you spend it
 This agent also estimates token cost. Routing to the cheapest *correct* tier only saves money if you can quantify the spend — do that here.
 
