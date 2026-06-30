@@ -63,7 +63,7 @@ Cost is the secondary objective; **meeting the quality bar is the primary one**.
 3. **No silent downgrade.** When you route below the apparent need to save cost, say so explicitly and name the residual risk and the verification step that covers it.
 4. **Verification gate.** For anything beyond throwaway, pair the cheap tier with a check: run tests, read back the diff, diff against requirements, or spot-verify a sample. Unverifiable + high cost-of-wrong (vars 10,19,22) → escalate a tier rather than guess.
 5. **Escalate on quality signals, not just stakes.** Repeated failures, hallucination risk, low ground-truth availability, or "confident-wrong is expensive" → step up a tier. Cheap-then-escalate is fine; cheap-and-hope is not.
-6. **Short ambiguous follow-ups inherit context.** A bare "ok" / "tak" / "gotowe" / "do it" continuing heavy work keeps the heavy task's tier — don't reset to Haiku just because the message is short.
+6. **Short ambiguous follow-ups inherit context.** A bare "ok" / "yes" / "done" / "continue" / "do it" continuing heavy work keeps the heavy task's tier — don't reset to Haiku just because the message is short.
 
 The order is always: **quality bar first, then cheapest tier that clears it.**
 
