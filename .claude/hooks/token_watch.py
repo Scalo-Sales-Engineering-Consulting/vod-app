@@ -75,9 +75,13 @@ def main():
               "don't re-read unchanged files; reuse cached context; "
               "return diffs not full files; batch independent reads in one turn.")
 
+    # Subscription-first: savings are quota/cap freed, not cash; act on the suggestion.
+    subs = (" SUBSCRIPTION: flat-rate plan — savings = cap freed, not cash; stay within it, "
+            "act on this tier (delegate to a cheaper subagent), don't pay for metered API without asking.")
+
     msg = (f"token-economist: suggested model tier = {tier} ({why}). "
            "Use the cheapest tier that MEETS THE QUALITY BAR; escalate if it risks being wrong. "
-           "Delegate trivial sub-steps to Haiku agents; read only what's needed." + quality + volume)
+           "Delegate trivial sub-steps to Haiku agents; read only what's needed." + quality + volume + subs)
     print(json.dumps({
         "hookSpecificOutput": {
             "hookEventName": "UserPromptSubmit",
