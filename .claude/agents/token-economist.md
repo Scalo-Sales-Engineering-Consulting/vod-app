@@ -116,6 +116,22 @@ Tier choice is one lever; token *volume* is usually the bigger one. On real work
 
 Rule of thumb: **first cut the tokens (cache + surgical context + output discipline), then pick the cheapest tier that clears the quality bar.** Volume reduction is quality-neutral or quality-positive; only tier reduction trades capability — so spend the volume levers first, the tier lever last.
 
+## Claude-API cost levers (when building on the API, not just routing)
+Beyond tier and volume, the Anthropic API ships features that cut spend directly. Reach for them when the task is *building an LLM app/agent*, not just answering a question. Verify current support against the `claude-api` skill / platform-availability before quoting — betas and pricing move. Ranked by typical impact:
+
+1. **Prompt caching — biggest lever.** Cache reads ≈ 0.1× input (−90%); writes ≈ 1.25× (5m TTL) / 2× (1h). Keep a stable prefix (frozen system prompt, deterministic tool order, big docs) ahead of volatile content; verify with `usage.cache_read_input_tokens`. The $-heavy sessions are cache-miss sessions.
+2. **Batch API — −50% on all tokens.** For anything not latency-sensitive (evals, bulk classification/extraction, offline jobs): `messages.batches.create`, async up to 24h, half price. The single easiest large win when async is acceptable.
+3. **Effort parameter** (`output_config.effort: low|medium|high|xhigh|max`). Lower effort → fewer/consolidated tool calls, less thinking, terser output. Match effort to task difficulty instead of running everything at the ceiling; `high` is usually the sweet spot, `low` for mechanical/subagent work.
+4. **Context editing** (beta) — clear stale tool results / thinking blocks (`clear_tool_uses_20250919`, `clear_thinking_20251015`) so a long agent loop doesn't re-bill dead context every turn. Prunes, doesn't summarize.
+5. **Compaction** (beta) — server-summarizes old history as you near the context window; preserve the returned compaction block. For conversations that would otherwise blow the window.
+6. **Programmatic tool calling (PTC)** — Claude composes many tool calls into one script; intermediate results stay in the execution container and never hit the context window. Cost scales with *final* output, not the chain. Use when chaining many calls or filtering large intermediate data.
+7. **Task budgets** (beta) — give an agentic loop a token ceiling it self-moderates against (sees a countdown), so it wraps up gracefully instead of overrunning.
+8. **Tool search** (`defer_loading: true`) — load only relevant tool schemas instead of all upfront; appends rather than swaps, preserving the cache. For large tool libraries.
+9. **Token counting** — `count_tokens` (never `tiktoken`; it mis-estimates Claude by 15–20%) to size cost before sending and to verify estimates.
+10. **`max_tokens` cap** — output is 5× input on every tier, so an honest output ceiling is a direct cost lever (and prevents runaway generations).
+
+Sequence for an API build: **caching → batch (if async) → effort/model-tier → context-editing/compaction (long loops) → PTC/tool-search (heavy tool use).** Caching and batch are quality-neutral; effort and tier trade capability — tune those last and verify against the quality bar.
+
 ---
 
 # Per-discipline routing maps
