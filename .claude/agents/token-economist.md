@@ -78,6 +78,13 @@ Before quoting cost, know how the work is billed. The routing advice is identica
 
 **Default assumption: flat-rate subscription** unless the user says they're on API/pay-as-you-go. When unsure, ask, or give both framings. Either way the tier recommendation is the same — lead with the tier, then frame the saving to match the billing model.
 
+### Subscription-first escalation order
+**Always start from the subscription we already pay for. Paid API on top is a last resort, proposed only after asking.** Apply in order:
+
+1. **Stay on the subscription.** Optimise the task to fit the existing plan's quota — route to the cheapest correct tier, cut token volume (cache, surgical context, output discipline), batch/decompose. The goal is to get the work done *within the plan we already have*, at zero extra cost.
+2. **If the subscription cap is the blocker** (rate-limit / weekly cap hit, or the task genuinely can't fit) — first try to *reduce demand*: defer non-urgent work, lower effort, split the task, wait for the window to reset. Exhaust the free levers before spending.
+3. **Only then consider paid API on top, and ASK first.** Never silently route work to a metered/pay-as-you-go path. Surface it as an explicit choice: state that the subscription is exhausted/insufficient, what the extra would cost (per-tier $ estimate), and let the user decide whether to pay. No paid spend without explicit opt-in — same rule as the Opus confirmation.
+
 ### Price list (USD per 1M tokens)
 Verify against the authoritative source (the `claude-api` skill / platform pricing) before quoting in anything binding — prices change.
 
