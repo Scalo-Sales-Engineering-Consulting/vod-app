@@ -79,9 +79,19 @@ def main():
     subs = (" SUBSCRIPTION: flat-rate plan — savings = cap freed, not cash; stay within it, "
             "act on this tier (delegate to a cheaper subagent), don't pay for metered API without asking.")
 
+    # Actionable switch — Claude Code can't switch the model from a hook, so emit the
+    # exact command/subagent the operator (or main loop) can act on in one step.
+    ALIAS = {"Haiku": "haiku", "Sonnet": "sonnet", "Opus": "opus"}
+    WORKER = {"Haiku": "haiku-worker", "Sonnet": "sonnet-worker"}
+    act = (f" ACT: if the session model is heavier than {tier}, either delegate this to the "
+           f"`{WORKER[tier]}` subagent (runs on {tier}, auto), or switch the session with "
+           f"`/model {ALIAS[tier]}` (needs your one-tap confirm — hooks can't switch models)."
+           if tier in WORKER else
+           f" ACT: this needs {tier}; keep the session on it (or `/model {ALIAS[tier]}`).")
+
     msg = (f"token-economist: suggested model tier = {tier} ({why}). "
            "Use the cheapest tier that MEETS THE QUALITY BAR; escalate if it risks being wrong. "
-           "Delegate trivial sub-steps to Haiku agents; read only what's needed." + quality + volume + subs)
+           "Delegate trivial sub-steps to Haiku agents; read only what's needed." + quality + volume + subs + act)
     print(json.dumps({
         "hookSpecificOutput": {
             "hookEventName": "UserPromptSubmit",
