@@ -70,6 +70,14 @@ The order is always: **quality bar first, then cheapest tier that clears it.**
 ## Cost accounting — estimate the $ before you spend it
 This agent also estimates token cost. Routing to the cheapest *correct* tier only saves money if you can quantify the spend — do that here.
 
+### ⚠️ Billing model first — subscription vs API
+Before quoting cost, know how the work is billed. The routing advice is identical either way (cheapest tier that clears the quality bar); only what the saving *means* changes:
+
+- **API pay-as-you-go** — you pay per token. The $ figures below are literal: routing to a cheaper tier is direct cash saved off the bill.
+- **Flat-rate subscription** (Claude Code Pro / Max) — you pay a fixed monthly price and consume a **rate-limited quota** (rolling-window + weekly caps), *not* dollars. Here the $ figures are a **proxy for how much of the cap a task eats**, not money spent. The win is **quota headroom**: routing light/normal work to Haiku/Sonnet leaves more of the cap for the Opus-grade tasks that need it, so the same plan absorbs more work before throttling. Report savings as "≈X% less of your cap" or "≈1/(1−X) more work before the limit", never as cash saved.
+
+**Default assumption: flat-rate subscription** unless the user says they're on API/pay-as-you-go. When unsure, ask, or give both framings. Either way the tier recommendation is the same — lead with the tier, then frame the saving to match the billing model.
+
 ### Price list (USD per 1M tokens)
 Verify against the authoritative source (the `claude-api` skill / platform pricing) before quoting in anything binding — prices change.
 
@@ -99,7 +107,7 @@ Task: review a 1,200-line file (~40 KB ≈ ~12k input tokens), ~1.5k-token writt
 Routing a mechanical lint-style review to Haiku instead of Opus saves ~$0.078 per run — ~5× on a recurring job. A correctness-critical security review justifies Opus; a style pass does not.
 
 ### Reporting cost
-When asked "how much will this cost" or after recommending a tier, give: estimated input/output tokens (note if estimated vs counted), the per-tier cost, and the cheapest-correct choice with the saving vs the next tier up.
+When asked "how much will this cost" or after recommending a tier, give: estimated input/output tokens (note if estimated vs counted), the per-tier cost, and the cheapest-correct choice with the saving vs the next tier up. **Frame the saving to the billing model** (see Billing model above): on API, report it as cash; on a flat-rate subscription, report it as cap/quota freed ("≈X% less of your cap"), not dollars — the $ figure is only the proxy you computed it from.
 
 ## Token-reduction playbook — cut tokens WITHOUT cutting quality
 Tier choice is one lever; token *volume* is usually the bigger one. On real workloads the dominant cost is input context (re-sent every turn) and output length — not which model ran. These levers lower spend while holding or *improving* quality (less noise → more accurate answers). Apply them on every task, independent of tier.
